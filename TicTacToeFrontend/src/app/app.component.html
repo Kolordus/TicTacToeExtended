@@ -1,0 +1,26 @@
+
+<button (click)="getFromServer()">
+  get game
+</button>
+
+<input [(ngModel)]="hello">
+<button (click)="connect()">
+  connect
+</button>
+
+<button (click)="send()">
+  send
+</button>
+
+<button (click)="print()">
+  print all
+</button>
+
+<div>
+  {{this.gameId}}
+</div>
+
+<div *ngFor="let field of game?.board; let i = index">
+  <div> {{ field.fieldNo }}-{{field.currentNominal}}-{{field.playerNo}}</div>
+  <div *ngIf="(i+1) % 3 == 0"> dupa </div>
+</div>
