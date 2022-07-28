@@ -38,7 +38,6 @@ export class AppComponent {
   webSocketEndPoint: string = 'http://localhost:8080/game';
   hello: string = '';
   topicPrefix: string = "/topic/room/";
-  topic: string = this.topicPrefix + this.hello;
   prefix: string = '/app/dupa';
   stompClient: any;
 
@@ -47,8 +46,12 @@ export class AppComponent {
     let ws = new SockJS(this.webSocketEndPoint);
     this.stompClient = Stomp.over(ws);
     const _this = this;
+
+    // _this.stompClient.disconnect() // TODO
+
     _this.stompClient.connect({}, function () {
       _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) {
+      // _this.stompClient.subscribe(_this.prefix + '/' + _this.hello, function (sdkEvent: String) {
         _this.onMessageReceived(sdkEvent);
       });
       //_this.stompClient.reconnect_delay = 2000;
