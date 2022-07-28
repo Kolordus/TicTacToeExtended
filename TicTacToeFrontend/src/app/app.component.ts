@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import * as SockJS from "sockjs-client";
 import * as Stomp from 'stompjs';
@@ -11,7 +11,8 @@ import * as Stomp from 'stompjs';
 export class AppComponent {
 
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+  }
 
   connectionUrl = 'http://localhost:8080/api/v1/';
   title = 'TicTacToeFrontend';
@@ -22,8 +23,8 @@ export class AppComponent {
   print() {
     console.log('gameid ' + this.gameId);
     console.log('controlka ' + this.hello);
-    console.log('topic name ' + this.topicPrefix + this.hello);
-    console.log('endpoint ' + this.prefix + '/' + this.hello);
+    // console.log('topic name ' + this.topicPrefix + this.hello);
+    console.log('endpoint ' + this.appPrefix + '/' + this.hello);
   }
 
   getFromServer() {
@@ -38,8 +39,10 @@ export class AppComponent {
   webSocketEndPoint: string = 'http://localhost:8080/game';
   hello: string = '';
   topicPrefix: string = "/topic/room/";
-  prefix: string = '/app/dupa';
+  appPrefix: string = '/app/dupa';
   stompClient: any;
+
+  canContinue: boolean;
 
   connect() {
     console.log("Initialize WebSocket Connection");
@@ -49,17 +52,32 @@ export class AppComponent {
 
     // _this.stompClient.disconnect() // TODO
 
+
+    // czyli tak -> subskrypcja tylko na chwilę, by ogarnąc czy można w ogóle
+    // jeśli tak to spoko, jeśli nei ro rezygnuje
+
+    // connect łączy się do sockJS
     _this.stompClient.connect({}, function () {
-      _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) {
-      // _this.stompClient.subscribe(_this.prefix + '/' + _this.hello, function (sdkEvent: String) {
+
+      // ten jest do uzyskania czy można kontynować
+      _this.stompClient.subscribe(_this.appPrefix + '/' + _this.hello, function (sdkEvent: String) { // to jest próba
         _this.onMessageReceived(sdkEvent);
       });
+
+      // ten jest do kontynuowania
+      _this.canContinue ?
+      _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) { // to działało
+        _this.onMessageReceived(sdkEvent);
+      }) : console.log('ni mozna');
+
       //_this.stompClient.reconnect_delay = 2000;
     }, this.errorCallBack);
   };
 
   onMessageReceived(message: String) {
     console.log("Message Recieved from Server :: " + message);
+
+    this.canContinue = message.toString().endsWith('1');
   }
 
   errorCallBack(error: String) {
@@ -70,15 +88,20 @@ export class AppComponent {
   }
 
   send() {
-    console.log("calling logout api via web socket");
-    this.stompClient.send(this.prefix + '/' + this.hello, {}, JSON.stringify({gameId: this.hello, fieldNo: '5', nominal: '1'}));
+    console.log("sending");
+    this.canContinue ?
+      this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
+        gameId: this.hello,
+        fieldNo: '5',
+        nominal: '1'
+      }))
+      : console.log('nie mozna');
   }
 }
 
 class GameWithId {
   game: Game;
   gameId: String;
-
 
   constructor(game: Game, gameId: String) {
     this.game = game;
