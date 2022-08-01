@@ -2,10 +2,12 @@ package core;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 public class Game {
 
+    private final String gameId;
     private final List<Field> board;
     private final Player player1;
     private final Player player2;
@@ -20,10 +22,11 @@ public class Game {
     }
 
     public Game() {
-        board = prepareBoard();
-        player1 = new Player(1);
-        player2 = new Player(2);
-        currentPlayer = player1;
+        this.gameId = UUID.randomUUID().toString();
+        this.board = prepareBoard();
+        this.player1 = new Player(1);
+        this.player2 = new Player(2);
+        this.currentPlayer = player1;
     }
 
     public void newInput(int fieldNo, int nominal) {
@@ -77,6 +80,10 @@ public class Game {
 
     public void changeTurn() {
         currentPlayer = currentPlayer == player1 ? player2 : player1;
+    }
+
+    public String getGameId() {
+        return gameId;
     }
 }
 

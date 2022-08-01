@@ -16,12 +16,9 @@ export class AppComponent {
 
   connectionUrl = 'http://localhost:8080/api/v1/';
   title = 'TicTacToeFrontend';
-
-  gameId: String = '';
   game: Game | undefined;
 
   print() {
-    console.log('gameid ' + this.gameId);
     console.log('controlka ' + this.hello);
     // console.log('topic name ' + this.topicPrefix + this.hello);
     console.log('endpoint ' + this.appPrefix + '/' + this.hello);
@@ -30,9 +27,7 @@ export class AppComponent {
   getFromServer() {
     this.http.get(this.connectionUrl + "create")
       .subscribe(value => {
-        let gameWithId = value as GameWithId;
-        this.gameId = gameWithId.gameId;
-        this.game = gameWithId.game;
+        this.game = value as Game;
       })
   }
 
@@ -65,10 +60,14 @@ export class AppComponent {
       });
 
       // ten jest do kontynuowania
-      _this.canContinue ?
+      // _this.canContinue ?
+      // _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) { // to działało
+      //   _this.onMessageReceived(sdkEvent);
+      // }) : console.log('ni mozna');
+// todo do naprawy!!!
       _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) { // to działało
         _this.onMessageReceived(sdkEvent);
-      }) : console.log('ni mozna');
+      })
 
       //_this.stompClient.reconnect_delay = 2000;
     }, this.errorCallBack);
@@ -87,24 +86,22 @@ export class AppComponent {
     }, 5000);
   }
 
+  // send() {
+  //   console.log("sending");
+  //   this.canContinue ?
+  //     this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
+  //       gameId: this.hello,
+  //       fieldNo: '5',
+  //       nominal: '1'
+  //     }))
+  //     : console.log('nie mozna');
+  // }
+
   send() {
-    console.log("sending");
-    this.canContinue ?
-      this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
-        gameId: this.hello,
-        fieldNo: '5',
-        nominal: '1'
-      }))
-      : console.log('nie mozna');
-  }
-}
-
-class GameWithId {
-  game: Game;
-  gameId: String;
-
-  constructor(game: Game, gameId: String) {
-    this.game = game;
-    this.gameId = gameId;
+    this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
+      gameId: this.game?.gameId,
+      fieldNo: '5',
+      nominal: '1'
+    }))
   }
 }

@@ -16,13 +16,16 @@ public class GameService {
 
     public GameService(VictoryChecker victoryChecker) {
         this.victoryChecker = victoryChecker;
-
         games = new HashMap<>(64);
     }
 
-    public Game createGame(String gameId) {
+    public Game createGame() {
         Game game = new Game();
-        games.put(gameId, game);
+
+//        if (games.values().size() > 64)
+//            return
+
+        games.put(game.getGameId(), game);
 
         return game;
     }

@@ -19,8 +19,6 @@ import java.util.UUID;
 @CrossOrigin(value = "http://localhost:4200")
 public class Controller {
 
-    // tutaj trzymamy gry z ilością graczy
-
     private Map<String, Integer> playersAtGame;
 
     private final GameService gameService;
@@ -33,11 +31,43 @@ public class Controller {
     }
 
     @GetMapping("/create")
-    public GameWithId createGame() {
-        String gameId = UUID.randomUUID().toString();
+    public Game createGame() {
+        Game game = gameService.createGame();
 
-        return new GameWithId(gameId, gameService.createGame(gameId));
+        playersAtGame.put(game.getGameId(), 1);
+
+        return game;
     }
+
+    // send()
+    @MessageMapping("/dupa/{gameId}")
+    @SendTo("/topic/room/{gameId}")
+    public Game method(@DestinationVariable String gameId, GameData gameData) {
+        return gameService.updateGame(gameId, Integer.parseInt(gameData.fieldNo), Integer.parseInt(gameData.nominal));
+    }
+
+    // todo -> a gdyby tak z ustawień wyjebać prefix "/app" ?????????
+    @SubscribeMapping("/dupa/{gameId}")
+    public boolean subscribe(@DestinationVariable String gameId) {
+        Integer playersInGame = playersAtGame.getOrDefault(gameId, 0);
+        if (playersInGame < 2) {
+            playersAtGame.merge(gameId, 1, Integer::sum);
+        }
+
+        return playersInGame < 2;
+    }
+
+
+    public Map<String, Integer> getGames() {
+        return playersAtGame;
+    }
+
+    record GameData(String gameId, String fieldNo, String nominal) { }
+
+
+
+}
+
 
 //    @EventListener
 //    public void handleSessionSubscribeEvent(SessionSubscribeEvent event) {
@@ -89,25 +119,3 @@ public class Controller {
 //
 //        System.out.println("===SessionDisconnectEvent===");
 //    }
-
-    // send()
-    @MessageMapping("/dupa/{gameId}")
-    @SendTo("/topic/room/{gameId}")
-    public Game method(@DestinationVariable String gameId, GameData gameData) {
-
-        return gameService.updateGame(gameData.gameId, Integer.parseInt(gameData.fieldNo), Integer.parseInt(gameData.nominal));
-    }
-
-    @SubscribeMapping("/dupa/{gameId}")
-    public String method(@DestinationVariable String gameId) {
-        System.out.println(gameId);
-        System.out.println("jest kurwa!!!");
-
-        return gameId.equals("s") ? "1" : "0";
-
-    }
-
-    record GameWithId(String gameId, Game game) { }
-    record GameData(String gameId, String fieldNo, String nominal) { }
-
-}
