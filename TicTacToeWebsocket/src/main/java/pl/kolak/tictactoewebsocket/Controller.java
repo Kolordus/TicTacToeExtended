@@ -1,18 +1,22 @@
 package pl.kolak.tictactoewebsocket;
 
 import core.Game;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/")
@@ -32,29 +36,53 @@ public class Controller {
 
     @GetMapping("/create")
     public Game createGame() {
-        Game game = gameService.createGame();
-
-        playersAtGame.put(game.getGameId(), 1);
-
-        return game;
+        return gameService.createGame();
     }
 
     // send()
     @MessageMapping("/dupa/{gameId}")
-    @SendTo("/topic/room/{gameId}")
+    @SendTo("/dupa/{gameId}")
     public Game method(@DestinationVariable String gameId, GameData gameData) {
         return gameService.updateGame(gameId, Integer.parseInt(gameData.fieldNo), Integer.parseInt(gameData.nominal));
     }
 
-    // todo -> a gdyby tak z ustawień wyjebać prefix "/app" ?????????
     @SubscribeMapping("/dupa/{gameId}")
     public boolean subscribe(@DestinationVariable String gameId) {
-        Integer playersInGame = playersAtGame.getOrDefault(gameId, 0);
-        if (playersInGame < 2) {
-            playersAtGame.merge(gameId, 1, Integer::sum);
+        if (playersAtGame.get(gameId) == null) {
+            playersAtGame.put(gameId, 1);
+            return true;
         }
 
-        return playersInGame < 2;
+        if (playersAtGame.get(gameId) == 1) {
+            playersAtGame.merge(gameId, 1, Integer::sum);
+            return true;
+        }
+
+        return false;
+    }
+
+    @EventListener
+    public void another(SessionDisconnectEvent event) {
+        System.out.println("===SessionDisconnectEvent===");
+
+        GenericMessage message = (GenericMessage) event.getMessage();
+        String simpDestination = (String) message.getHeaders().get("simpDestination");
+        MessageHeaders headers = message.getHeaders();
+        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
+
+        System.out.println("===SessionDisconnectEvent===");
+    }
+
+    @EventListener
+    public void another(SessionUnsubscribeEvent event) {
+        System.out.println("===SessionUnsubscribeEvent===");
+
+        GenericMessage message = (GenericMessage) event.getMessage();
+        String simpDestination = (String) message.getHeaders().get("simpDestination");
+        MessageHeaders headers = message.getHeaders();
+        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
+
+        System.out.println("===SessionUnsubscribeEvent===");
     }
 
 
@@ -63,8 +91,6 @@ public class Controller {
     }
 
     record GameData(String gameId, String fieldNo, String nominal) { }
-
-
 
 }
 
@@ -108,14 +134,3 @@ public class Controller {
 //        System.out.println("===SessionConnectEvent===");
 //    }
 //
-//    @EventListener
-//    public void another(SessionDisconnectEvent event) {
-//        System.out.println("===SessionDisconnectEvent===");
-//
-//        GenericMessage message = (GenericMessage) event.getMessage();
-//        String simpDestination = (String) message.getHeaders().get("simpDestination");
-//        MessageHeaders headers = message.getHeaders();
-//        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-//
-//        System.out.println("===SessionDisconnectEvent===");
-//    }

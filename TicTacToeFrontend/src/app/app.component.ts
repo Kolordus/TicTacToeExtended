@@ -10,9 +10,7 @@ import * as Stomp from 'stompjs';
 })
 export class AppComponent {
 
-
-  constructor(private http: HttpClient) {
-  }
+  constructor(private http: HttpClient) {}
 
   connectionUrl = 'http://localhost:8080/api/v1/';
   title = 'TicTacToeFrontend';
@@ -20,7 +18,6 @@ export class AppComponent {
 
   print() {
     console.log('controlka ' + this.hello);
-    // console.log('topic name ' + this.topicPrefix + this.hello);
     console.log('endpoint ' + this.appPrefix + '/' + this.hello);
   }
 
@@ -33,13 +30,12 @@ export class AppComponent {
 
   webSocketEndPoint: string = 'http://localhost:8080/game';
   hello: string = '';
-  topicPrefix: string = "/topic/room/";
-  appPrefix: string = '/app/dupa';
+  appPrefix: string = '/dupa';
   stompClient: any;
 
   canContinue: boolean;
 
-  connect() {
+  async connect() {
     console.log("Initialize WebSocket Connection");
     let ws = new SockJS(this.webSocketEndPoint);
     this.stompClient = Stomp.over(ws);
@@ -47,17 +43,24 @@ export class AppComponent {
 
     // _this.stompClient.disconnect() // TODO
 
-
-    // czyli tak -> subskrypcja tylko na chwilę, by ogarnąc czy można w ogóle
-    // jeśli tak to spoko, jeśli nei ro rezygnuje
-
     // connect łączy się do sockJS
-    _this.stompClient.connect({}, function () {
+    await _this.stompClient.connect({}, async function () {
 
-      // ten jest do uzyskania czy można kontynować
-      _this.stompClient.subscribe(_this.appPrefix + '/' + _this.hello, function (sdkEvent: String) { // to jest próba
-        _this.onMessageReceived(sdkEvent);
+      await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.hello, function (msg: String) { // to jest próba
+        _this.showReceivedFromServer(msg);
+        console.log('subscribe ' + msg.toString().endsWith('true'));
+        _this.canContinue = msg.toString().endsWith('true');
+        console.log('canContinue? ' + _this.canContinue);
       });
+
+      await _this.delay(100);
+
+      console.log('halo próbujemy sprawdzić czy możemy się podpiąć ' + _this.canContinue);
+
+      if (!_this.canContinue) {
+        _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.hello);
+        _this.stompClient.disconnect(_this.appPrefix + '/' + _this.hello);
+      }
 
       // ten jest do kontynuowania
       // _this.canContinue ?
@@ -65,18 +68,15 @@ export class AppComponent {
       //   _this.onMessageReceived(sdkEvent);
       // }) : console.log('ni mozna');
 // todo do naprawy!!!
-      _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) { // to działało
-        _this.onMessageReceived(sdkEvent);
-      })
 
       //_this.stompClient.reconnect_delay = 2000;
     }, this.errorCallBack);
   };
 
-  onMessageReceived(message: String) {
-    console.log("Message Recieved from Server :: " + message);
 
-    this.canContinue = message.toString().endsWith('1');
+
+  showReceivedFromServer(message: String) {
+    console.log("Message Recieved from Server :: " + message);
   }
 
   errorCallBack(error: String) {
@@ -98,10 +98,16 @@ export class AppComponent {
   // }
 
   send() {
+    console.log('canContinue in send? ' + this.canContinue);
+
     this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
       gameId: this.game?.gameId,
       fieldNo: '5',
       nominal: '1'
     }))
+  }
+
+  delay(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
   }
 }
