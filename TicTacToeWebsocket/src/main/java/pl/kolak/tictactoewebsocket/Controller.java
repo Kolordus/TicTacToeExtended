@@ -6,13 +6,12 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.support.GenericMessage;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import java.util.HashMap;
@@ -39,6 +38,11 @@ public class Controller {
         return gameService.createGame();
     }
 
+    @GetMapping("/game/{gameId}")
+    public Game getGame(@PathVariable String gameId) {
+        return gameService.getGame(gameId);
+    }
+
     // send()
     @MessageMapping("/dupa/{gameId}")
     @SendTo("/dupa/{gameId}")
@@ -47,18 +51,35 @@ public class Controller {
     }
 
     @SubscribeMapping("/dupa/{gameId}")
-    public boolean subscribe(@DestinationVariable String gameId) {
-        if (playersAtGame.get(gameId) == null) {
-            playersAtGame.put(gameId, 1);
-            return true;
-        }
+    public int subscribe(@DestinationVariable String gameId, SimpMessageHeaderAccessor headerAccessor) {
 
-        if (playersAtGame.get(gameId) == 1) {
+        // todo : prawdopodobnie dojdzie całkowita zmiana by podporządkować gry do tych id :|
+//        headerAccessor.headers.get("simpSessionId")
+
+        this.gameService.getGame(gameId);
+        int result = 0;
+
+        if (gameExist(gameId)) {
             playersAtGame.merge(gameId, 1, Integer::sum);
-            return true;
+            result = 2;
         }
 
+        if (gameDoesntExist(gameId)) {
+            playersAtGame.put(gameId, 1);
+            result = 1;
+        }
+
+        return result;
+    }
+
+    private boolean gameExist(String gameId) {
+        if (playersAtGame.get(gameId) != null)
+            return playersAtGame.get(gameId) == 1;
         return false;
+    }
+
+    private boolean gameDoesntExist(String gameId) {
+        return playersAtGame.get(gameId) == null;
     }
 
     @EventListener
@@ -67,6 +88,7 @@ public class Controller {
 
         GenericMessage message = (GenericMessage) event.getMessage();
         String simpDestination = (String) message.getHeaders().get("simpDestination");
+        System.out.println(simpDestination);
         MessageHeaders headers = message.getHeaders();
         headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
 
@@ -79,10 +101,26 @@ public class Controller {
 
         GenericMessage message = (GenericMessage) event.getMessage();
         String simpDestination = (String) message.getHeaders().get("simpDestination");
+        System.out.println(simpDestination);
         MessageHeaders headers = message.getHeaders();
         headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
 
         System.out.println("===SessionUnsubscribeEvent===");
+    }
+
+    @EventListener
+    public void handleSessionSubscribeEvent(SessionSubscribeEvent event) {
+        System.out.println("===SessionSubscribeEvent===");
+
+        GenericMessage message = (GenericMessage) event.getMessage();
+        String simpDestination = (String) message.getHeaders().get("simpDestination");
+        MessageHeaders headers = message.getHeaders();
+        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
+
+        if (simpDestination.startsWith("/topic/room/")) {
+            System.out.println("o chuj");
+        }
+        System.out.println("===SessionSubscribeEvent===");
     }
 
 
@@ -90,25 +128,12 @@ public class Controller {
         return playersAtGame;
     }
 
-    record GameData(String gameId, String fieldNo, String nominal) { }
+    record GameData(String gameId, String fieldNo, String nominal) {
+    }
 
 }
 
 
-//    @EventListener
-//    public void handleSessionSubscribeEvent(SessionSubscribeEvent event) {
-//        System.out.println("===SessionSubscribeEvent===");
-//
-//        GenericMessage message = (GenericMessage) event.getMessage();
-//        String simpDestination = (String) message.getHeaders().get("simpDestination");
-//        MessageHeaders headers = message.getHeaders();
-//        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-//
-//        if (simpDestination.startsWith("/topic/room/")) {
-//            System.out.println("o chuj");
-//        }
-//        System.out.println("===SessionSubscribeEvent===");
-//    }
 //
 //    @EventListener
 //    public void connect(SessionConnectEvent event) {

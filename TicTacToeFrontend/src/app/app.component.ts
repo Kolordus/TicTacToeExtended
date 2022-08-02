@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import * as SockJS from "sockjs-client";
 import * as Stomp from 'stompjs';
+import {delay} from "rxjs";
 
 @Component({
   selector: 'app-root',
@@ -32,47 +33,82 @@ export class AppComponent {
   hello: string = '';
   appPrefix: string = '/dupa';
   stompClient: any;
-
   canContinue: boolean;
+  isConnected: boolean = false;
+  gameReceived: boolean = false;
+  playerNo: number;
 
-  async connect() {
-    console.log("Initialize WebSocket Connection");
+  selectedNominal: number;
+  selectedFieldNo: number;
+
+  async connectAndSubscribe() {
     let ws = new SockJS(this.webSocketEndPoint);
     this.stompClient = Stomp.over(ws);
     const _this = this;
 
-    // _this.stompClient.disconnect() // TODO
-
-    // connect łączy się do sockJS
     await _this.stompClient.connect({}, async function () {
+      console.log("Initialize WebSocket Connection");
+    }, this.errorCallBack);
 
-      await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.hello, function (msg: String) { // to jest próba
-        _this.showReceivedFromServer(msg);
-        console.log('subscribe ' + msg.toString().endsWith('true'));
-        _this.canContinue = msg.toString().endsWith('true');
+    await _this.delay(100);
+
+    // próba połączenia do gry
+    await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.hello, async function (msg: String) {
+
+      _this.showReceivedFromServer(msg);
+
+      if (!_this.isConnected) {
+        if (msg.toString().endsWith('1')) {
+          _this.playerNo = 1;
+          _this.isConnected = _this.canContinue = true;
+        }
+        if (msg.toString().endsWith('2')) {
+          _this.playerNo = 2;
+          _this.isConnected = _this.canContinue = true;
+        }
+
+        // console.log('subscribe ' + msg.toString().endsWith('true'));
         console.log('canContinue? ' + _this.canContinue);
-      });
+        console.log('current player No ' + _this.playerNo);
 
-      await _this.delay(100);
-
-      console.log('halo próbujemy sprawdzić czy możemy się podpiąć ' + _this.canContinue);
-
-      if (!_this.canContinue) {
-        _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.hello);
-        _this.stompClient.disconnect(_this.appPrefix + '/' + _this.hello);
+        if (!_this.canContinue) {
+          _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.hello);
+          _this.stompClient.disconnect(_this.appPrefix + '/' + _this.hello);
+        }
       }
 
-      // ten jest do kontynuowania
-      // _this.canContinue ?
-      // _this.stompClient.subscribe(_this.topicPrefix + _this.hello, function (sdkEvent: String) { // to działało
-      //   _this.onMessageReceived(sdkEvent);
-      // }) : console.log('ni mozna');
-// todo do naprawy!!!
+      // getting game right after sub
+      if(!_this.gameReceived) {
+        let game = await _this.getGame();
+        await _this.delay(100);
+        _this.game = game;
+        _this.gameReceived = true;
 
-      //_this.stompClient.reconnect_delay = 2000;
-    }, this.errorCallBack);
+      }
+
+      // etting game state
+      if (msg.toString().includes('gameId')) {
+        let number = msg.toString().indexOf("{\"game");
+        _this.game = JSON.parse(msg.toString().slice(number));
+        console.log(_this.game);
+      }
+
+    });
+
   };
 
+  async getGame() {
+    let game;
+
+    await this.http.get(this.connectionUrl + "game/" + this.hello)
+      .subscribe(value => {
+        game = value as Game;
+      });
+
+    await this.delay(100);
+
+    return game;
+  }
 
 
   showReceivedFromServer(message: String) {
@@ -82,32 +118,37 @@ export class AppComponent {
   errorCallBack(error: String) {
     console.log("errorCallBack -> " + error)
     setTimeout(() => {
-      this.connect();
+      this.connectAndSubscribe();
     }, 5000);
   }
-
-  // send() {
-  //   console.log("sending");
-  //   this.canContinue ?
-  //     this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
-  //       gameId: this.hello,
-  //       fieldNo: '5',
-  //       nominal: '1'
-  //     }))
-  //     : console.log('nie mozna');
-  // }
 
   send() {
     console.log('canContinue in send? ' + this.canContinue);
 
     this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
       gameId: this.game?.gameId,
-      fieldNo: '5',
-      nominal: '1'
+      fieldNo: this.selectedFieldNo,
+      nominal: this.selectedNominal
     }))
   }
 
   delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  setInput(fieldNo: number) {
+    if (this.game?.currentPlayer.no === this.playerNo)
+      this.selectedFieldNo = fieldNo;
+  }
+
+  selectNominal(nominal: number) {
+    if (this.game?.currentPlayer.no === this.playerNo)
+      this.selectedNominal = nominal;
+  }
+
+  getBackgroundColor(playerNo: number): string {
+    if (playerNo == 1) return 'red';
+    if (playerNo == 2) return 'yellow';
+    return 'white';
   }
 }

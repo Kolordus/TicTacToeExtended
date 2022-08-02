@@ -30,6 +30,10 @@ public class GameService {
         return game;
     }
 
+    public Game getGame(String gameId) {
+        return this.games.get(gameId);
+    }
+
     public Game updateGame(String gameId, int fieldNo, int nominal) {
         Game game = games.get(gameId);
 
@@ -38,6 +42,10 @@ public class GameService {
         return someoneWon(game) ?
                 games.remove(gameId)
                 : games.put(gameId, game);
+    }
+
+    public Map<String, Game> getGamesForStats() {
+        return games;
     }
 
     private boolean someoneWon(Game game) {

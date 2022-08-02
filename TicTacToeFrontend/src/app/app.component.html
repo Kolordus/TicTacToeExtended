@@ -3,7 +3,7 @@
 </button>
 
 <input [(ngModel)]="hello">
-<button (click)="connect()">
+<button (click)="connectAndSubscribe()">
   connect
 </button>
 
@@ -16,15 +16,50 @@
 </button>
 
 <div>
-  {{ canContinue }}
   {{this.game?.gameId}}
 </div>
 
+<div>
+  ===
+</div>
+
 <ng-container *ngFor="let field of game?.board; let i = index" >
-<!--  <var [style.background-color]=getBackgroundColor(field.playerNo)>-->
-  <var >
-    {{ field.fieldNo }}-{{field.currentNominal}}-{{field.playerNo}} |
+  <var (click)="setInput(field.fieldNo)" [style.background-color]=getBackgroundColor(field.playerNo)>
+    {{field.currentNominal}} |
   </var>
 
-  <div *ngIf="(i+1) % 3 == 0"> --- --- --- --- --- --- --- </div>
+  <div *ngIf="(i+1) % 3 == 0"> --- --- ---</div>
 </ng-container>
+
+<div *ngIf="game">
+  <ng-container *ngIf="playerNo == 1">
+    <var *ngFor="let nominal of game.player1.nominalsLeft" (click)="selectNominal(nominal)">
+      {{ nominal }}
+    </var>
+  </ng-container>
+
+  <ng-container *ngIf="playerNo == 2">
+    <var *ngFor="let nominal of game.player2.nominalsLeft" (click)="selectNominal(nominal)">
+      {{ nominal }}
+    </var>
+  </ng-container>
+</div>
+
+======
+
+<ng-container *ngIf="game">
+  <div>
+    current player: {{game.currentPlayer.no}}
+  </div>
+  <div>
+    selected nominal: {{selectedNominal}}
+  </div>
+  <div>
+    selected field: {{selectedFieldNo}}
+  </div>
+
+  <div [style.background-color]=getBackgroundColor(playerNo)>
+    this is your color
+  </div>
+</ng-container>
+

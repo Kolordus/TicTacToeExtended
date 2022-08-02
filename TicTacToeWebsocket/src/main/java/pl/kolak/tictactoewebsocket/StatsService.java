@@ -12,20 +12,25 @@ public class StatsService {
 
     private final Logger logger = LoggerFactory.getLogger(StatsService.class);
     private final Controller controller;
+    private final GameService gameService;
 
-    public StatsService(Controller controller) {
+    public StatsService(Controller controller, GameService gameService) {
         this.controller = controller;
+        this.gameService = gameService;
     }
 
     @Scheduled(cron = "*/5 * * * * *")
     public void showStats() {
         Map<String, Integer> games = controller.getGames();
 
-        if (games.keySet().size() == 0)
-            logger.info("No games currently");
+//        if (games.keySet().size() == 0)
+//            logger.info("No games currently");
+//
+//        games.forEach((key, integer) -> {
+//            logger.info("At game {} there is {} players", key, integer);
+//        });
 
-        games.forEach((key, integer) -> {
-            logger.info("At game {} there is {} players", key, integer);
-        });
+        System.out.println("currently played games" + gameService.getGamesForStats().keySet().size());
+
     }
 }
