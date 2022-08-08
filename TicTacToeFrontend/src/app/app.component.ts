@@ -1,45 +1,55 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import * as SockJS from "sockjs-client";
 import * as Stomp from 'stompjs';
-import {delay} from "rxjs";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent  implements OnInit {
 
   constructor(private http: HttpClient) {}
 
+  ngOnInit(): void {
+    this.showAvailableGames();
+  }
+
   connectionUrl = 'http://localhost:8080/api/v1/';
-  title = 'TicTacToeFrontend';
-  game: Game | undefined;
-
-  print() {
-    console.log('controlka ' + this.hello);
-    console.log('endpoint ' + this.appPrefix + '/' + this.hello);
-  }
-
-  getFromServer() {
-    this.http.get(this.connectionUrl + "create")
-      .subscribe(value => {
-        this.game = value as Game;
-      })
-  }
-
   webSocketEndPoint: string = 'http://localhost:8080/game';
-  hello: string = '';
-  appPrefix: string = '/dupa';
+  appPrefix: string = '/room';
+  gameId: string = '';
+
   stompClient: any;
   canContinue: boolean;
   isConnected: boolean = false;
   gameReceived: boolean = false;
-  playerNo: number;
 
+  availableGames: Map<string, number>;
+
+  game: GameData | undefined;
+  playerNo: number;
   selectedNominal: number;
   selectedFieldNo: number;
+  winner: number | undefined = -1;
+
+  async createGame() {
+    this.http.get(this.connectionUrl + "games/create")
+      .subscribe(value => {
+        this.game = value as GameData;
+        this.gameId = this.game.game.gameId;
+      });
+
+    await this.connectAndSubscribe();
+  }
+
+  async showAvailableGames() {
+    await this.http.get(this.connectionUrl + "games")
+      .subscribe(value => {
+        this.availableGames = value as Map<string, number>;
+      })
+  }
 
   async connectAndSubscribe() {
     let ws = new SockJS(this.webSocketEndPoint);
@@ -53,7 +63,7 @@ export class AppComponent {
     await _this.delay(100);
 
     // próba połączenia do gry
-    await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.hello, async function (msg: String) {
+    await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.gameId, async function (msg: String) {
 
       _this.showReceivedFromServer(msg);
 
@@ -67,13 +77,10 @@ export class AppComponent {
           _this.isConnected = _this.canContinue = true;
         }
 
-        // console.log('subscribe ' + msg.toString().endsWith('true'));
-        console.log('canContinue? ' + _this.canContinue);
-        console.log('current player No ' + _this.playerNo);
-
+        // too many players
         if (!_this.canContinue) {
-          _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.hello);
-          _this.stompClient.disconnect(_this.appPrefix + '/' + _this.hello);
+          _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.gameId);
+          _this.stompClient.disconnect(_this.appPrefix + '/' + _this.gameId);
         }
       }
 
@@ -86,11 +93,11 @@ export class AppComponent {
 
       }
 
-      // etting game state
+      // getting game state after update
       if (msg.toString().includes('gameId')) {
         let number = msg.toString().indexOf("{\"game");
         _this.game = JSON.parse(msg.toString().slice(number));
-        console.log(_this.game);
+        _this.winner = _this.game?.whoWon == -1 ? -1 : _this.game?.whoWon;
       }
 
     });
@@ -100,7 +107,7 @@ export class AppComponent {
   async getGame() {
     let game;
 
-    await this.http.get(this.connectionUrl + "game/" + this.hello)
+    await this.http.get(this.connectionUrl + "games/" + this.gameId)
       .subscribe(value => {
         game = value as Game;
       });
@@ -125,8 +132,8 @@ export class AppComponent {
   send() {
     console.log('canContinue in send? ' + this.canContinue);
 
-    this.stompClient.send(this.appPrefix + '/' + this.hello, {}, JSON.stringify({
-      gameId: this.game?.gameId,
+    this.stompClient.send(this.appPrefix + '/' + this.gameId, {}, JSON.stringify({
+      gameId: this.game?.game.gameId,
       fieldNo: this.selectedFieldNo,
       nominal: this.selectedNominal
     }))
@@ -137,12 +144,12 @@ export class AppComponent {
   }
 
   setInput(fieldNo: number) {
-    if (this.game?.currentPlayer.no === this.playerNo)
+    if (this.game?.game.currentPlayer.no === this.playerNo)
       this.selectedFieldNo = fieldNo;
   }
 
   selectNominal(nominal: number) {
-    if (this.game?.currentPlayer.no === this.playerNo)
+    if (this.game?.game.currentPlayer.no === this.playerNo && this.winner === -1)
       this.selectedNominal = nominal;
   }
 

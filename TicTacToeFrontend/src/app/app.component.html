@@ -1,9 +1,17 @@
-<button (click)="getFromServer()">
-  get game
+Available games:
+<div *ngIf="!isConnected && !canContinue">
+  <div *ngFor="let game of availableGames | keyvalue">
+    on game: {{game.key}} is: {{game.value}} players
+  </div>
+</div>
+
+
+<button *ngIf="!isConnected && !canContinue" (click)="createGame()">
+  create game
 </button>
 
-<input [(ngModel)]="hello">
-<button (click)="connectAndSubscribe()">
+<input *ngIf="!isConnected && !canContinue" [(ngModel)]="gameId">
+<button *ngIf="!isConnected && !canContinue" (click)="connectAndSubscribe()">
   connect
 </button>
 
@@ -11,19 +19,15 @@
   send
 </button>
 
-<button (click)="print()">
-  print all
-</button>
-
-<div>
-  {{this.game?.gameId}}
+<div *ngIf="!isConnected && !canContinue">
+  {{this.game?.game?.gameId}}
 </div>
 
 <div>
   ===
 </div>
 
-<ng-container *ngFor="let field of game?.board; let i = index" >
+<ng-container *ngFor="let field of game?.game?.board; let i = index" >
   <var (click)="setInput(field.fieldNo)" [style.background-color]=getBackgroundColor(field.playerNo)>
     {{field.currentNominal}} |
   </var>
@@ -33,13 +37,13 @@
 
 <div *ngIf="game">
   <ng-container *ngIf="playerNo == 1">
-    <var *ngFor="let nominal of game.player1.nominalsLeft" (click)="selectNominal(nominal)">
+    <var *ngFor="let nominal of game?.game?.player1?.nominalsLeft" (click)="selectNominal(nominal)">
       {{ nominal }}
     </var>
   </ng-container>
 
   <ng-container *ngIf="playerNo == 2">
-    <var *ngFor="let nominal of game.player2.nominalsLeft" (click)="selectNominal(nominal)">
+    <var *ngFor="let nominal of game?.game?.player2?.nominalsLeft" (click)="selectNominal(nominal)">
       {{ nominal }}
     </var>
   </ng-container>
@@ -49,7 +53,7 @@
 
 <ng-container *ngIf="game">
   <div>
-    current player: {{game.currentPlayer.no}}
+    current player: {{game?.game?.currentPlayer?.no}}
   </div>
   <div>
     selected nominal: {{selectedNominal}}
@@ -63,3 +67,11 @@
   </div>
 </ng-container>
 
+
+<div *ngIf="winner !== -1">
+  <hr/>
+  <br/>
+  Winner:
+    <var *ngIf="winner === 1"> Player 1 </var>
+    <var *ngIf="winner === 2"> Player 2 </var>
+</div>

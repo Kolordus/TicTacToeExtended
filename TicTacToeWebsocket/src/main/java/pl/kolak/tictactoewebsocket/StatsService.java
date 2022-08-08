@@ -19,18 +19,17 @@ public class StatsService {
         this.gameService = gameService;
     }
 
-    @Scheduled(cron = "*/5 * * * * *")
+    @Scheduled(cron = "*/10 * * * * *")
     public void showStats() {
         Map<String, Integer> games = controller.getGames();
 
 //        if (games.keySet().size() == 0)
 //            logger.info("No games currently");
 //
-//        games.forEach((key, integer) -> {
-//            logger.info("At game {} there is {} players", key, integer);
-//        });
+        games.forEach((key, integer) -> {
+            logger.info("At game {} there is {} players", key, integer);
+        });
 
-        System.out.println("currently played games" + gameService.getGamesForStats().keySet().size());
-
+//        logger.info("currently played games {}", gameService.getGamesForStats().keySet().size());
     }
 }

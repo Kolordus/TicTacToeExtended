@@ -19,7 +19,7 @@ public class GameService {
         games = new HashMap<>(64);
     }
 
-    public Game createGame() {
+    public GameData createGame() {
         Game game = new Game();
 
 //        if (games.values().size() > 64)
@@ -27,28 +27,46 @@ public class GameService {
 
         games.put(game.getGameId(), game);
 
-        return game;
+        return new GameData(game, VictoryChecker.NO_ONE);
     }
 
-    public Game getGame(String gameId) {
-        return this.games.get(gameId);
+    public GameData getGame(String gameId) {
+        return new GameData(this.games.get(gameId), VictoryChecker.NO_ONE);
     }
 
-    public Game updateGame(String gameId, int fieldNo, int nominal) {
+    public GameData updateGameAndCheckVictory(String gameId, int fieldNo, int nominal) {
+        GameData result;
+
+        Game game = updateGame(gameId, fieldNo, nominal);
+
+        result = checkVictory(gameId, game);
+
+        return result;
+    }
+
+    private Game updateGame(String gameId, int fieldNo, int nominal) {
         Game game = games.get(gameId);
-
         game.newInput(fieldNo, nominal);
-
-        return someoneWon(game) ?
-                games.remove(gameId)
-                : games.put(gameId, game);
+        return game;
     }
 
     public Map<String, Game> getGamesForStats() {
         return games;
     }
 
-    private boolean someoneWon(Game game) {
-        return victoryChecker.checkForWinner(game) != VictoryChecker.NO_ONE;
+    private GameData checkVictory(String gameId, Game game) {
+        GameData result;
+        int winner = victoryChecker.checkForWinner(game);
+        if (winner == VictoryChecker.NO_ONE) {
+            games.put(gameId, game);
+            result = new GameData(game, winner);
+        }
+        else {
+            result = new GameData(games.remove(gameId), winner);
+        }
+        return result;
     }
+
+
+
 }

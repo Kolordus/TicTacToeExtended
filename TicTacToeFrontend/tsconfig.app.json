@@ -10,7 +10,8 @@
     "src/polyfills.ts",
     "src/model/Game.ts",
     "src/model/Field.ts",
-    "src/model/Player.ts"
+    "src/model/Player.ts",
+    "src/model/GameData.ts"
   ],
   "include": [
     "src/**/*.d.ts"
