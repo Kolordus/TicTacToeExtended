@@ -1,20 +1,20 @@
 package pl.kolak.tictactoewebsocket;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import core.VictoryChecker;
-import org.springframework.context.event.EventListener;
-import org.springframework.messaging.MessageHeaders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.messaging.support.GenericMessage;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.web.socket.messaging.SessionSubscribeEvent;
-import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,18 +23,24 @@ import java.util.stream.Collectors;
 @CrossOrigin(value = "http://localhost:4200")
 public class Controller {
 
-    private final Map<String, Integer> playersAtGame;
+    record GameDataInput(String gameId, String fieldNo, String nominal) {
+    }
+
+    private final Logger logger = LoggerFactory.getLogger(Controller.class);
 
     private final GameService gameService;
 
-//    private static int playersNo = 0;
+    private final ObjectMapper objectMapper;
+
+    private final Map<String, Integer> playersAtGame;
 
     public Controller(GameService gameService) {
         this.gameService = gameService;
         playersAtGame = new HashMap<>(64);
+        objectMapper = new ObjectMapper();
     }
 
-    @GetMapping("/games/create")
+    @PostMapping("/games")
     public GameData createGame() {
         return gameService.createGame();
     }
@@ -44,36 +50,40 @@ public class Controller {
         return gameService.getGame(gameId);
     }
 
+    @PutMapping("/games/{gameId}")
+    public void disconnectFromGame(@PathVariable String gameId) {
+        gameService.removeGame(gameId);
+        playersAtGame.remove(gameId);
+    }
+
     @GetMapping("/games")
-    public Map<String, Integer> showAvailableGames() {
+    public List<String> showAvailableGames() {
         return playersAtGame.entrySet()
                 .stream()
                 .filter(gamePlayersNo -> gamePlayersNo.getValue() <= 1)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
+    /**
+     * @return WebSocket client doesn't respond to null so null is returnable.
+     */
     @MessageMapping("/room/{gameId}")
     @SendTo("/room/{gameId}")
-    public GameData updateGame(@DestinationVariable String gameId, GameDataInput gameDataInput) {
-        GameData gameData = gameService.updateGameAndCheckVictory(gameId,
-                Integer.parseInt(gameDataInput.fieldNo),
-                Integer.parseInt(gameDataInput.nominal));
+    public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
 
-        deleteGameIfOver(gameData);
+        if (playerDisconnected(payload)) {
+            logEvent(gameId, payload);
+            return GameData.EMPTY;
+        }
 
-        return gameData;
+        GameDataInput gameDataInput = getGameDataInput(payload, gameId);
+
+        return updateGame(gameId, gameDataInput);
     }
 
     @SubscribeMapping("/room/{gameId}")
     public int subscribe(@DestinationVariable String gameId, SimpMessageHeaderAccessor headerAccessor) {
-
-        // todo : prawdopodobnie dojdzie całkowita zmiana by podporządkować gry do tych id :|
-        System.out.println("jedziemy z headerami:");
-        headerAccessor.getMessageHeaders().entrySet()
-                .stream()
-                .forEach(keyval -> System.out.println(keyval.getKey() + " " + keyval.getValue()));
-
-        this.gameService.getGame(gameId);
         int result = 0;
 
         if (gameExist(gameId)) {
@@ -87,6 +97,36 @@ public class Controller {
         }
 
         return result;
+    }
+
+    private GameDataInput getGameDataInput(String payload, String gameId) {
+        GameDataInput gameDataInput = null;
+        try {
+            gameDataInput = objectMapper.readValue(payload, GameDataInput.class);
+        } catch (JsonProcessingException e) {
+            logger.info("Unknown error. Data gathered: gameId: {}, payload: {}", gameId, payload);
+        }
+
+        return gameDataInput;
+    }
+
+    private boolean playerDisconnected(String payload) {
+        return payload.contains("surrender");
+    }
+
+    private GameData updateGame(String gameId, GameDataInput gameDataInput) {
+        GameData gameData;
+        gameData = gameService.updateGameAndCheckVictory(gameId,
+                Integer.parseInt(gameDataInput.fieldNo),
+                Integer.parseInt(gameDataInput.nominal));
+
+        deleteGameIfOver(gameData);
+        return gameData;
+    }
+
+    private void logEvent(String gameId, String payload) {
+        String disconnectedPlayerId = payload.substring(payload.lastIndexOf(":") + 1, payload.length() - 1);
+        logger.info("Player {} disconnected the game {}", disconnectedPlayerId, gameId);
     }
 
     private void deleteGameIfOver(GameData gameData) {
@@ -105,80 +145,12 @@ public class Controller {
         return playersAtGame.get(gameId) == null;
     }
 
-    @EventListener
-    public void catchDisconnectEvent(SessionDisconnectEvent event) {
-        System.out.println("===SessionDisconnectEvent===");
-
-        GenericMessage message = (GenericMessage) event.getMessage();
-//        String simpDestination = (String) message.getHeaders().get("simpDestination");
-//        System.out.println(simpDestination);
-        System.out.println(message.getPayload());
-        MessageHeaders headers = message.getHeaders();
-        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-
-        System.out.println("===SessionDisconnectEvent===");
-    }
-
-    @EventListener
-    public void catchUnsubscribeEvent(SessionUnsubscribeEvent event) {
-        System.out.println("===SessionUnsubscribeEvent===");
-
-        GenericMessage message = (GenericMessage) event.getMessage();
-        String simpDestination = (String) message.getHeaders().get("simpDestination");
-        System.out.println(simpDestination);
-        MessageHeaders headers = message.getHeaders();
-        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-
-        System.out.println("===SessionUnsubscribeEvent===");
-    }
-
-    @EventListener
-    public void catchSubscribeEvent(SessionSubscribeEvent event) {
-        System.out.println("===SessionSubscribeEvent===");
-
-        GenericMessage message = (GenericMessage) event.getMessage();
-        String simpDestination = (String) message.getHeaders().get("simpDestination");
-        MessageHeaders headers = message.getHeaders();
-        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-
-        if (simpDestination.startsWith("/topic/room/")) {
-            System.out.println("o chuj");
-        }
-        System.out.println("===SessionSubscribeEvent===");
-    }
-
-
     public Map<String, Integer> getGames() {
         return playersAtGame;
     }
 
-    record GameDataInput(String gameId, String fieldNo, String nominal) { }
+    private boolean isNotValid(GameDataInput gameDataInput) {
+        return gameDataInput.gameId == null || gameDataInput.fieldNo == null || gameDataInput.nominal == null;
+    }
 
 }
-
-
-//
-//    @EventListener
-//    public void connect(SessionConnectEvent event) {
-//        System.out.println("===SessionConnectEvent===");
-//
-//        GenericMessage message = (GenericMessage) event.getMessage();
-//        String simpDestination = (String) message.getHeaders().get("simpDestination");
-//        MessageHeaders headers = message.getHeaders();
-//        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-//
-//        System.out.println("===SessionConnectEvent===");
-//    }
-//
-//    @EventListener
-//    public void connected(SessionConnectedEvent event) {
-//        System.out.println("===SessionConnectEvent===");
-//
-//        GenericMessage message = (GenericMessage) event.getMessage();
-//        String simpDestination = (String) message.getHeaders().get("simpDestination");
-//        MessageHeaders headers = message.getHeaders();
-//        headers.forEach((s, o) -> System.out.println(s + " " + o.toString()));
-//
-//        System.out.println("===SessionConnectEvent===");
-//    }
-//

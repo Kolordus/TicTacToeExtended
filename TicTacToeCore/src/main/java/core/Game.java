@@ -22,11 +22,16 @@ public class Game {
     }
 
     public Game() {
-        this.gameId = UUID.randomUUID().toString();
+        this.gameId = generateGameId();
         this.board = prepareBoard();
         this.player1 = new Player(1);
         this.player2 = new Player(2);
         this.currentPlayer = player1;
+    }
+
+    private String generateGameId() {
+        String uuid = UUID.randomUUID().toString();
+        return uuid.substring(0, 10).replaceAll("-", "");
     }
 
     public void newInput(int fieldNo, int nominal) {

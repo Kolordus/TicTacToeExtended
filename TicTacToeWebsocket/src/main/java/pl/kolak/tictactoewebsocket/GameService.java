@@ -30,6 +30,10 @@ public class GameService {
         return new GameData(game, VictoryChecker.NO_ONE);
     }
 
+    public void removeGame(String gameId) {
+        this.games.remove(gameId);
+    }
+
     public GameData getGame(String gameId) {
         return new GameData(this.games.get(gameId), VictoryChecker.NO_ONE);
     }

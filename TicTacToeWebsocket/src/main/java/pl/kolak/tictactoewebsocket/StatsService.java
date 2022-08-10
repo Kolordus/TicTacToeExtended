@@ -23,13 +23,12 @@ public class StatsService {
     public void showStats() {
         Map<String, Integer> games = controller.getGames();
 
-//        if (games.keySet().size() == 0)
-//            logger.info("No games currently");
-//
-        games.forEach((key, integer) -> {
-            logger.info("At game {} there is {} players", key, integer);
-        });
+        games.forEach((key, integer) -> logger.info("from Controller: At game {} there is {} players", key, integer));
 
-//        logger.info("currently played games {}", gameService.getGamesForStats().keySet().size());
+        int size = gameService.getGamesForStats().keySet().size();
+
+        if (size > 0)
+            logger.info("from gameservice: {} games", gameService.getGamesForStats().keySet().size());
+
     }
 }
