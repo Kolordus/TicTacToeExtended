@@ -11,10 +11,10 @@ import java.util.Map;
 public class StatsService {
 
     private final Logger logger = LoggerFactory.getLogger(StatsService.class);
-    private final Controller controller;
+    private final WebSocketController controller;
     private final GameService gameService;
 
-    public StatsService(Controller controller, GameService gameService) {
+    public StatsService(WebSocketController controller, GameService gameService) {
         this.controller = controller;
         this.gameService = gameService;
     }

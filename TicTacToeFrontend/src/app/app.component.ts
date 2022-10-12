@@ -2,6 +2,7 @@ import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import * as SockJS from "sockjs-client";
 import * as Stomp from 'stompjs';
+import {EventService} from "./event.service";
 
 @Component({
   selector: 'app-root',
@@ -10,15 +11,18 @@ import * as Stomp from 'stompjs';
 })
 export class AppComponent  implements OnInit, OnDestroy {
 
-  constructor(private http: HttpClient) {}
+  gameHistory = Array<Game>();
+
+  constructor(private http: HttpClient, private sse: EventService) {}
 
   ngOnInit(): void {
     this.showAvailableGames();
+    this.sse.getServerSentEvent("http://localhost:8080/sse")
+      .subscribe(value => console.log(value));
   }
 
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
-
     if (this.gameId !== null) {
       let promises = [];
       promises.push(
@@ -30,7 +34,6 @@ export class AppComponent  implements OnInit, OnDestroy {
           surrenders: this.playerNo
         }))
       )
-
       await Promise.all(promises);
     }
   }
@@ -81,57 +84,83 @@ export class AppComponent  implements OnInit, OnDestroy {
 
     await _this.delay(100);
 
-    // próba połączenia do gry
-    await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.gameId.trim(), async function (msg: String) {
+    // try connect to a game
+    await _this.stompClient.subscribe(_this.appPrefix + '/' + _this.gameId.trim(), async (msg: String) => {
 
       _this.showReceivedFromServer(msg);
 
       if (!_this.isConnected) {
-        if (msg.toString().endsWith('1')) {
-          _this.playerNo = 1;
-          _this.isConnected = _this.canContinue = true;
-        }
-        if (msg.toString().endsWith('2')) {
-          _this.playerNo = 2;
-          _this.isConnected = _this.canContinue = true;
-        }
-
-        // too many players
-        if (!_this.canContinue) {
-          _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.gameId);
-          _this.stompClient.disconnect(_this.appPrefix + '/' + _this.gameId);
-          ws.close();
-        }
+        this._setPlayerNo(msg, _this);
+        this._dontAllowConnectionIfTooManyPlayers(_this, ws);
       }
+      await this._prepareGameAfterSuccessfulSubscribe(_this);
 
-      // getting game right after sub
-      if(!_this.gameReceived) {
-        let game = await _this.getGame();
-        await _this.delay(100);
-        _this.game = game;
-        _this.gameReceived = true;
-      }
+      this._handleStateUpdate(msg, _this);
 
-      // getting game state after update
-      if (msg.toString().includes('gameId')) {
-        let number = msg.toString().indexOf("{\"game");
-        _this.game = JSON.parse(msg.toString().slice(number));
-        _this.winner = _this.game?.whoWon == -1 ? -1 : _this.game?.whoWon;
-      }
-
-      // someone dicsonnected
-      if (msg.toString().includes('surrenders')) {
-        let number = msg.toString().indexOf("{\"surrenders");
-        let surrendedPlayer = JSON.parse(msg.toString().slice(number));
-
-        _this.winner = surrendedPlayer.surrenders === 1 ? 2 : 1;
-
-        _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.gameId);
-        _this.stompClient.disconnect(_this.appPrefix + '/' + _this.gameId);
-        ws.close();
-      }
+      this._handleDisconnection(msg, _this, ws);
     });
   };
+
+  protected _setPlayerNo(msg: String, _this: this) {
+    if (msg.toString().endsWith('1')) {
+      _this.playerNo = 1;
+      _this.isConnected = _this.canContinue = true;
+    }
+
+    if (msg.toString().endsWith('2')) {
+      _this.playerNo = 2;
+      _this.isConnected = _this.canContinue = true;
+    }
+  }
+
+  protected _dontAllowConnectionIfTooManyPlayers(_this: this, ws: WebSocket) {
+    if (!_this.canContinue) {
+      _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.gameId);
+      _this.stompClient.disconnect(_this.appPrefix + '/' + _this.gameId);
+      ws.close();
+    }
+  }
+
+  protected async _prepareGameAfterSuccessfulSubscribe(_this: this) {
+    if (!_this.gameReceived) {
+      let game = await _this.getGame();
+      await _this.delay(100);
+      _this.game = game;
+      _this.gameReceived = true;
+    }
+  }
+
+  protected _handleStateUpdate(msg: String, _this: this) {
+    if (msg.toString().includes('gameId')) {
+      let indexWherePayloadStarts = msg.toString().indexOf("{\"game");
+      _this.game = JSON.parse(msg.toString().slice(indexWherePayloadStarts));
+
+      this._saveStateInMemory(this.game);
+
+      _this.winner = _this.game?.whoWon == -1 ? -1 : _this.game?.whoWon;
+    }
+  }
+
+  _saveStateInMemory(game: GameData | undefined) {
+    if (game) {
+      this.gameHistory.push(game.game);
+    }
+
+    this.gameHistory = this.gameHistory.filter(e => e !== undefined);
+  }
+
+  protected _handleDisconnection(msg: String, _this: this, ws: WebSocket) {
+    if (msg.toString().includes('surrenders')) {
+      let number = msg.toString().indexOf("{\"surrenders");
+      let surrendedPlayer = JSON.parse(msg.toString().slice(number));
+
+      _this.winner = surrendedPlayer.surrenders === 1 ? 2 : 1;
+
+      _this.stompClient.unsubscribe(_this.appPrefix + '/' + _this.gameId);
+      _this.stompClient.disconnect(_this.appPrefix + '/' + _this.gameId);
+      ws.close();
+    }
+  }
 
   async getGame() {
     let game;
@@ -145,7 +174,6 @@ export class AppComponent  implements OnInit, OnDestroy {
 
     return game;
   }
-
 
   showReceivedFromServer(message: String) {
     console.log("Message Recieved from Server :: " + message);
@@ -200,5 +228,21 @@ export class AppComponent  implements OnInit, OnDestroy {
   async joinGame(gameId: string) {
     this.gameId = gameId;
     await this.connectAndSubscribe();
+  }
+
+  getSse() {
+    this.http.get('http://localhost:8080/')
+      .subscribe(value => {
+        console.log(value);
+      });
+  }
+
+  showHistory() {
+    console.log(this.gameHistory);
+  }
+
+  showMoveOfIndex(i: number) {
+    let game1 = this.gameHistory[i];
+    console.log(JSON.stringify(game1));
   }
 }

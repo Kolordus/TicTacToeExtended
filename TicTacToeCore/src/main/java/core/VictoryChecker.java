@@ -19,7 +19,7 @@ public class VictoryChecker {
     private static final List<Integer> DIAGONAL_1 = List.of(1, 5, 9);
     private static final List<Integer> DIAGONAL_2 = List.of(3, 5, 7);
 
-    private
+    private final
     List<List<Integer>> cartesian = List.of(ROW_1, ROW_2, ROW_3, COLUMN_1, COLUMN_2, COLUMN_3, DIAGONAL_1, DIAGONAL_2);
 
     private List<Field> board;

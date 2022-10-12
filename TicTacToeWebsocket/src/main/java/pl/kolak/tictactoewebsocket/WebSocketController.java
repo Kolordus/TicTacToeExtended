@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import core.VictoryChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -20,13 +22,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/")
-@CrossOrigin(value = "http://localhost:4200")
-public class Controller {
+@CrossOrigin(value = "*")
+public class WebSocketController {
 
     record GameDataInput(String gameId, String fieldNo, String nominal) {
     }
 
-    private final Logger logger = LoggerFactory.getLogger(Controller.class);
+    private final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
 
     private final GameService gameService;
 
@@ -34,7 +36,7 @@ public class Controller {
 
     private final Map<String, Integer> playersAtGame;
 
-    public Controller(GameService gameService) {
+    public WebSocketController(GameService gameService) {
         this.gameService = gameService;
         playersAtGame = new HashMap<>(64);
         objectMapper = new ObjectMapper();
@@ -73,11 +75,11 @@ public class Controller {
     public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
 
         if (playerDisconnected(payload)) {
-            logEvent(gameId, payload);
+            logEventDisconnect(gameId, payload);
             return GameData.EMPTY;
         }
 
-        GameDataInput gameDataInput = getGameDataInput(payload, gameId);
+        GameDataInput gameDataInput = getGameDataInputFromPayload(payload, gameId);
 
         return updateGame(gameId, gameDataInput);
     }
@@ -99,7 +101,7 @@ public class Controller {
         return result;
     }
 
-    private GameDataInput getGameDataInput(String payload, String gameId) {
+    private GameDataInput getGameDataInputFromPayload(String payload, String gameId) {
         GameDataInput gameDataInput = null;
         try {
             gameDataInput = objectMapper.readValue(payload, GameDataInput.class);
@@ -124,7 +126,7 @@ public class Controller {
         return gameData;
     }
 
-    private void logEvent(String gameId, String payload) {
+    private void logEventDisconnect(String gameId, String payload) {
         String disconnectedPlayerId = payload.substring(payload.lastIndexOf(":") + 1, payload.length() - 1);
         logger.info("Player {} disconnected the game {}", disconnectedPlayerId, gameId);
     }
@@ -136,7 +138,7 @@ public class Controller {
     }
 
     private boolean gameExist(String gameId) {
-        if (playersAtGame.get(gameId) != null)
+        if (playersAtGame.containsKey(gameId))
             return playersAtGame.get(gameId) == 1;
         return false;
     }
@@ -149,8 +151,9 @@ public class Controller {
         return playersAtGame;
     }
 
-    private boolean isNotValid(GameDataInput gameDataInput) {
-        return gameDataInput.gameId == null || gameDataInput.fieldNo == null || gameDataInput.nominal == null;
+    @EventListener
+    public void catchEvent(ApplicationReadyEvent event) {
+
     }
 
 }

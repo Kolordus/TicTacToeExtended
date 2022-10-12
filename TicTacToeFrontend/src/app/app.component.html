@@ -67,6 +67,13 @@
   </div>
 </ng-container>
 
+<div *ngIf="game">
+  Previous moves:
+  <div *ngFor="let game of gameHistory; let i = index">
+    <button (click)="showMoveOfIndex(i)"> {{ i+1 }} </button>
+  </div>
+</div>
+
 
 <div *ngIf="winner !== -1">
   <hr/>
