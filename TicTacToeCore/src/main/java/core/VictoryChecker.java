@@ -36,18 +36,18 @@ public class VictoryChecker {
     }
 
     private int checkRowOrColumnForVictory(List<Integer> rowOrColumn) {
-        int counter = 0;
+        int playersSymbols = 0;
         int placeTakenByPlayer = 0;
         for (Field field : getRowOrColumn(rowOrColumn)) {
             if (field.playerNo() == 0)
                 break;
-            if (counter == 0)
+            if (playersSymbols == 0)
                 placeTakenByPlayer = field.playerNo();
             if (field.playerNo() == placeTakenByPlayer)
-                counter++;
+                playersSymbols++;
         }
 
-        if (counter == 3)
+        if (playersSymbols == 3)
             return placeTakenByPlayer;
 
         return -1;

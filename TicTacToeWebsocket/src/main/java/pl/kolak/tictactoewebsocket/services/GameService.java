@@ -1,8 +1,10 @@
-package pl.kolak.tictactoewebsocket;
+package pl.kolak.tictactoewebsocket.services;
 
 import core.Game;
 import core.VictoryChecker;
 import org.springframework.stereotype.Service;
+import pl.kolak.tictactoewebsocket.model.GameData;
+import pl.kolak.tictactoewebsocket.model.GameDataInput;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +40,16 @@ public class GameService {
         return new GameData(this.games.get(gameId), VictoryChecker.NO_ONE);
     }
 
-    public GameData updateGameAndCheckVictory(String gameId, int fieldNo, int nominal) {
+    public GameData updateGame(String gameId, GameDataInput gameDataInput) {
+        GameData gameData = updateGameAndCheckVictory(gameId,
+                Integer.parseInt(gameDataInput.fieldNo()),
+                Integer.parseInt(gameDataInput.nominal()));
+
+
+        return gameData;
+    }
+
+    private GameData updateGameAndCheckVictory(String gameId, int fieldNo, int nominal) {
         GameData result;
 
         Game game = updateGame(gameId, fieldNo, nominal);
@@ -70,7 +81,5 @@ public class GameService {
         }
         return result;
     }
-
-
 
 }

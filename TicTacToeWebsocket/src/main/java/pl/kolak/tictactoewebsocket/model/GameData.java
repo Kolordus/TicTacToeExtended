@@ -1,4 +1,4 @@
-package pl.kolak.tictactoewebsocket;
+package pl.kolak.tictactoewebsocket.model;
 
 import core.Game;
 

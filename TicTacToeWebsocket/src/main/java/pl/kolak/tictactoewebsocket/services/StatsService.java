@@ -1,4 +1,4 @@
-package pl.kolak.tictactoewebsocket;
+package pl.kolak.tictactoewebsocket.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,17 +11,17 @@ import java.util.Map;
 public class StatsService {
 
     private final Logger logger = LoggerFactory.getLogger(StatsService.class);
-    private final WebSocketController controller;
+    private final PlayersService playersService;
     private final GameService gameService;
 
-    public StatsService(WebSocketController controller, GameService gameService) {
-        this.controller = controller;
+    public StatsService(PlayersService playersService, GameService gameService) {
+        this.playersService = playersService;
         this.gameService = gameService;
     }
 
     @Scheduled(cron = "*/10 * * * * *")
     public void showStats() {
-        Map<String, Integer> games = controller.getGames();
+        Map<String, Integer> games = playersService.getGames();
 
         games.forEach((key, integer) -> logger.info("from Controller: At game {} there is {} players", key, integer));
 

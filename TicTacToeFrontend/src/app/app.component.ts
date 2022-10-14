@@ -2,7 +2,7 @@ import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import * as SockJS from "sockjs-client";
 import * as Stomp from 'stompjs';
-import {EventService} from "./event.service";
+import {EventService} from "./service/event.service";
 
 @Component({
   selector: 'app-root',
@@ -15,10 +15,14 @@ export class AppComponent  implements OnInit, OnDestroy {
 
   constructor(private http: HttpClient, private sse: EventService) {}
 
-  ngOnInit(): void {
-    this.showAvailableGames();
-    this.sse.getServerSentEvent("http://localhost:8080/sse")
-      .subscribe(value => console.log(value));
+  async ngOnInit() {
+    await this.showAvailableGames();
+    this.sse.getServerSentEvent("http://localhost:8080/sse/room1")
+      .subscribe(value => {
+        let event = value as MessageEvent;
+        alert(event.data);
+        console.log(value);
+      });
   }
 
   @HostListener('window:beforeunload')
@@ -55,6 +59,7 @@ export class AppComponent  implements OnInit, OnDestroy {
   selectedNominal: number | undefined;
   selectedFieldNo: number | undefined;
   winner: number | undefined = -1;
+  sseMsg: string;
 
   async createGame() {
     this.http.post(this.connectionUrl + "games", null)
@@ -244,5 +249,10 @@ export class AppComponent  implements OnInit, OnDestroy {
   showMoveOfIndex(i: number) {
     let game1 = this.gameHistory[i];
     console.log(JSON.stringify(game1));
+  }
+
+  sendSse() {
+    console.log(this.sseMsg)
+    this.http.post("http://localhost:8080/sse/room1", this.sseMsg).subscribe(_ => _);
   }
 }

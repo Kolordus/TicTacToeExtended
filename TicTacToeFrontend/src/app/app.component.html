@@ -82,3 +82,12 @@
     <var *ngIf="winner === 1"> Player 1 </var>
     <var *ngIf="winner === 2"> Player 2 </var>
 </div>
+
+
+<div>
+  Sse test
+  <input [(ngModel)]="sseMsg">
+  <button (click)="sendSse()">
+    send
+  </button>
+</div>

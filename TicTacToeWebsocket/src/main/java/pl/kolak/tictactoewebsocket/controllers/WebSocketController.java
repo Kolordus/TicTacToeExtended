@@ -1,8 +1,7 @@
-package pl.kolak.tictactoewebsocket;
+package pl.kolak.tictactoewebsocket.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.VictoryChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -14,31 +13,30 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.*;
+import pl.kolak.tictactoewebsocket.model.GameData;
+import pl.kolak.tictactoewebsocket.model.GameDataInput;
+import pl.kolak.tictactoewebsocket.services.GameService;
+import pl.kolak.tictactoewebsocket.services.PlayersService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/")
 @CrossOrigin(value = "*")
 public class WebSocketController {
 
-    record GameDataInput(String gameId, String fieldNo, String nominal) {
-    }
-
     private final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
 
     private final GameService gameService;
 
+    private final PlayersService playersService;
+
     private final ObjectMapper objectMapper;
 
-    private final Map<String, Integer> playersAtGame;
-
-    public WebSocketController(GameService gameService) {
+    public WebSocketController(GameService gameService, PlayersService playersService) {
         this.gameService = gameService;
-        playersAtGame = new HashMap<>(64);
+        this.playersService = playersService;
+
         objectMapper = new ObjectMapper();
     }
 
@@ -55,16 +53,12 @@ public class WebSocketController {
     @PutMapping("/games/{gameId}")
     public void disconnectFromGame(@PathVariable String gameId) {
         gameService.removeGame(gameId);
-        playersAtGame.remove(gameId);
+        playersService.removeGame(gameId);
     }
 
     @GetMapping("/games")
     public List<String> showAvailableGames() {
-        return playersAtGame.entrySet()
-                .stream()
-                .filter(gamePlayersNo -> gamePlayersNo.getValue() <= 1)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+        return playersService.getAvailableGames();
     }
 
     /**
@@ -79,26 +73,28 @@ public class WebSocketController {
             return GameData.EMPTY;
         }
 
-        GameDataInput gameDataInput = getGameDataInputFromPayload(payload, gameId);
+        GameData gameData =
+                gameService.updateGame(gameId, getGameDataInputFromPayload(payload, gameId));
+        playersService.deleteGameIfOver(gameData);
 
-        return updateGame(gameId, gameDataInput);
+        return gameData;
     }
 
     @SubscribeMapping("/room/{gameId}")
     public int subscribe(@DestinationVariable String gameId, SimpMessageHeaderAccessor headerAccessor) {
-        int result = 0;
+        int playersAtGame = 0;
 
-        if (gameExist(gameId)) {
-            playersAtGame.merge(gameId, 1, Integer::sum);
-            result = 2;
+        if (playersService.gameExist(gameId)) {
+            playersService.addPlayerToGame(gameId);
+            playersAtGame = 2;
         }
 
-        if (gameDoesntExist(gameId)) {
-            playersAtGame.put(gameId, 1);
-            result = 1;
+        if (playersService.gameDoesntExist(gameId)) {
+            playersService.setHostPlayer(gameId);
+            playersAtGame = 1;
         }
 
-        return result;
+        return playersAtGame;
     }
 
     private GameDataInput getGameDataInputFromPayload(String payload, String gameId) {
@@ -116,39 +112,9 @@ public class WebSocketController {
         return payload.contains("surrender");
     }
 
-    private GameData updateGame(String gameId, GameDataInput gameDataInput) {
-        GameData gameData;
-        gameData = gameService.updateGameAndCheckVictory(gameId,
-                Integer.parseInt(gameDataInput.fieldNo),
-                Integer.parseInt(gameDataInput.nominal));
-
-        deleteGameIfOver(gameData);
-        return gameData;
-    }
-
     private void logEventDisconnect(String gameId, String payload) {
         String disconnectedPlayerId = payload.substring(payload.lastIndexOf(":") + 1, payload.length() - 1);
         logger.info("Player {} disconnected the game {}", disconnectedPlayerId, gameId);
-    }
-
-    private void deleteGameIfOver(GameData gameData) {
-        if (gameData.whoWon() != VictoryChecker.NO_ONE) {
-            this.playersAtGame.remove(gameData.game().getGameId());
-        }
-    }
-
-    private boolean gameExist(String gameId) {
-        if (playersAtGame.containsKey(gameId))
-            return playersAtGame.get(gameId) == 1;
-        return false;
-    }
-
-    private boolean gameDoesntExist(String gameId) {
-        return playersAtGame.get(gameId) == null;
-    }
-
-    public Map<String, Integer> getGames() {
-        return playersAtGame;
     }
 
     @EventListener
