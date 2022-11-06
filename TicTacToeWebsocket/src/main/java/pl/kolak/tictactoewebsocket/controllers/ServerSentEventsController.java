@@ -15,8 +15,8 @@ import java.util.concurrent.Executors;
 @CrossOrigin(value = "*")
 public class ServerSentEventsController {
 
-    private final ExecutorService nonBlockingService = Executors
-            .newCachedThreadPool();
+    private final ExecutorService nonBlockingService =
+            Executors.newCachedThreadPool();
 
     private final Map<String, SseEmitter> emiters = new HashMap<>();
 
@@ -24,14 +24,17 @@ public class ServerSentEventsController {
     public ResponseEntity<SseEmitter> createSseTopic(@PathVariable String name) {
         SseEmitter emitter = new SseEmitter();
         emiters.put(name, emitter);
-
-        return new ResponseEntity<>(emitter, HttpStatus.OK);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(emitter);
     }
 
     @PostMapping("/sse/{name}")
     public ResponseEntity<?> sendToSseTopic(@PathVariable String name, @RequestBody String body) {
         if (noSuchTopic(name)) {
-            return new ResponseEntity<>("No topic with name: " + name, HttpStatus.NO_CONTENT);
+            return ResponseEntity
+                    .status(HttpStatus.NO_CONTENT)
+                    .body("No topic with name: " + name);
         }
 
         SseEmitter emitter = emiters.get(name);

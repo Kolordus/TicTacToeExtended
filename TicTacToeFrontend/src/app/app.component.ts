@@ -247,6 +247,7 @@ export class AppComponent  implements OnInit, OnDestroy {
   }
 
   showMoveOfIndex(i: number) {
+
     let game1 = this.gameHistory[i];
     console.log(JSON.stringify(game1));
   }

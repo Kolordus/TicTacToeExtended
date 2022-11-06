@@ -122,4 +122,9 @@ public class WebSocketController {
 
     }
 
+    @PatchMapping()
+    public void method() {
+        return ;
+    }
+
 }
