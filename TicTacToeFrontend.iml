@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$/TicTacToeFrontend">
       <excludeFolder url="file://$MODULE_DIR$/TicTacToeFrontend/dist" />
       <excludeFolder url="file://$MODULE_DIR$/TicTacToeFrontend/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/TicTacToeFrontend/.angular/cache/13.2.6/babel-webpack" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

@@ -1,0 +1,15 @@
+<ng-container *ngIf="playerNo == 1">
+  <var *ngFor="let nominal of game.game.player1.nominalsLeft" (click)="selectNominal(nominal)">
+    <button mat-stroked-button [ngClass]="nominalClass(nominal)">
+      {{ nominal }}
+    </button>
+  </var>
+</ng-container>
+
+<ng-container *ngIf="playerNo == 2">
+  <var *ngFor="let nominal of game.game.player2.nominalsLeft" (click)="selectNominal(nominal)">
+    <button mat-stroked-button class="nominal">
+      {{ nominal }}
+    </button>
+  </var>
+</ng-container>

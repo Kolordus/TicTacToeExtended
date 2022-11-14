@@ -1,0 +1,14 @@
+
+<p *ngIf="this.games && this.games.length === 0; else showGames">
+  No available games at the time
+</p>
+
+<ng-template #showGames>
+  <span>Available games:</span>
+  <div *ngFor="let gameId of games">
+    {{gameId}}
+    <button (click)="joinGame(gameId)" mat-raised-button color="primary">
+      join game
+    </button>
+  </div>
+</ng-template>

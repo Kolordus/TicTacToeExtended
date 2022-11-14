@@ -1,0 +1,32 @@
+<app-board (selectedField)="selectFieldNo($event)"></app-board>
+<app-nominals [playerNo]="playerNo$ | async" (selectedNominal)="selectNominal($event)"></app-nominals>
+<br>
+======
+<ng-container *ngIf="game">
+  <div>
+    current player: {{playerNo$ | async}}
+  </div>
+  <div>
+    selected nominal: {{selectedNominal$ | async}}
+  </div>
+  <div>
+    selected field: {{selectedFieldNo$ | async}}
+  </div>
+</ng-container>
+
+<!--<div *ngIf="game">-->
+<!--  Previous moves:-->
+<!--  <div *ngFor="let game of gameHistory; let i = index">-->
+<!--    <button (click)="showMoveOfIndex(i)"> {{ i + 1 }} </button>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--<div *ngIf="winner !== -1">-->
+<!--  <hr/>-->
+<!--  <br/>-->
+<!--  Winner:-->
+<!--  <var *ngIf="winner === 1"> Player 1 </var>-->
+<!--  <var *ngIf="winner === 2"> Player 2 </var>-->
+<!--</div>-->
+
+<button (click)="send()">send</button>
