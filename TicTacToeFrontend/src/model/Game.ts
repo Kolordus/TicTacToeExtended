@@ -1,4 +1,7 @@
-class Game {
+import {Field} from "./Field";
+import {Player} from "./Player";
+
+export class Game {
 
   static emtpy = new Game('', [], new Player(0, []), new Player(0, []), new Player(0, []));
 

@@ -1,4 +1,4 @@
-class Field {
+export class Field {
   fieldNo: number;
   playerNo: number;
   currentNominal: number

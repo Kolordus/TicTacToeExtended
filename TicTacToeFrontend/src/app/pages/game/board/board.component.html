@@ -1,8 +1,12 @@
 <ng-container *ngFor="let field of game?.game?.board; let i = index">
   <span (click)="selectFieldNo(field.fieldNo)">
-<!--        [style.background-color]=getBackgroundColor(field.playerNo)-->
-    {{field.currentNominal}} |
+    <button mat-raised-button
+            [ngClass]="buttonClass(field.playerNo)"
+            class="paddingMargin"
+            [class.selected]="isSelected(field.fieldNo)"
+    >
+       s
+    </button>
   </span>
-  <!---->
-  <div *ngIf="(i+1) % 3 == 0"> --- --- ---</div>
+  <div *ngIf="(i+1) % 3 == 0"></div>
 </ng-container>

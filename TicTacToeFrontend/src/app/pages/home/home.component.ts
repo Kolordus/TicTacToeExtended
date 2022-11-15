@@ -28,11 +28,7 @@ export class HomeComponent implements OnInit{
 
 /*
 TODO
-teraz tak:
-
-To musi być wszystko reaktywne.
-Czyli to czy jest połączone też musi być ustawione tak by się odświeżało.
-Obejrzec może jeszcze raz to o serwisach używającyh subjectów?
-I wtedy zrobić to tak jak należy!
-To będzie zrobione zaaaajeeeebiiiiśśśścieeee!!!
+1. game musi być nextowane i subskrybowane bo wiele rzeczy na tym polega
  */
+
+

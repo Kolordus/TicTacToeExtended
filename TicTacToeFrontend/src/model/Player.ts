@@ -1,4 +1,4 @@
-class Player {
+export class Player {
 
   no: number;
   nominalsLeft: Array<number>;

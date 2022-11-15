@@ -1,0 +1,21 @@
+.player-1 {
+  background-color: red;
+  color: red;
+}
+.player-2 {
+  background-color: blue;
+  color: blue;
+}
+.not-taken {
+  background-color: grey;
+  color: grey;
+}
+
+.selected {
+  border: 5px dotted yellow;
+}
+
+.paddingMargin {
+  padding: 20px;
+  margin: 10px;
+}

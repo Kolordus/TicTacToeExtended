@@ -1,3 +1,5 @@
+import {Game} from "./Game";
+
 export class GameData {
 
   static empty = new GameData(Game.emtpy, -1);

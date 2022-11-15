@@ -9,18 +9,35 @@ import {GameData} from "../../../../model/GameData";
 })
 export class BoardComponent implements OnInit {
 
-  game: GameData;
 
   @Output()
-  selectedField = new EventEmitter<number>();
+  selectedField$ = new EventEmitter<number>();
+  selectedField: number;
+
+  game: GameData;
 
   constructor(private gameService: GameService) { }
 
   ngOnInit(): void {
-    this.game = this.gameService.game;
+    this.gameService.game.subscribe(value => {
+      this.game = value;
+    });
   }
 
-  selectFieldNo(fieldNo: any) {
-    this.selectedField.emit(fieldNo);
+  selectFieldNo(fieldNo: number) {
+    this.selectedField = fieldNo;
+    this.selectedField$.emit(this.selectedField);
+  }
+
+  buttonClass(playerNo: number) {
+    switch (playerNo) {
+      case 1: return 'player-1';
+      case 2: return 'player-2';
+      default: return 'not-taken';
+    }
+  }
+
+  isSelected(fieldNo: number) {
+    return this.selectedField == fieldNo;
   }
 }

@@ -1,34 +1,43 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {GameService} from "../../../service/game.service";
+import {GameData} from "../../../../model/GameData";
 
 @Component({
   selector: 'app-nominals',
   templateUrl: './nominals.component.html',
   styleUrls: ['./nominals.component.css']
 })
-export class NominalsComponent {
-
-  constructor(private gameService: GameService) { }
+export class NominalsComponent implements OnInit {
 
   @Input()
   playerNo: number | null;
 
   @Output()
-  selectedNominal = new EventEmitter<number>();
+  selectedNominal$ = new EventEmitter<number>();
+  selectedNominal: number;
 
-  currentNominal: number;
+  game: GameData;
 
-  game = this.gameService.game;
+  constructor(private gameService: GameService) { }
+
+  ngOnInit(): void {
+    this.gameService.game.subscribe(value => {
+      this.game = value;
+    });
+  }
+
+
 
   selectNominal(nominal: number) {
-    this.currentNominal = nominal;
-    this.selectedNominal.emit(this.currentNominal);
+    this.selectedNominal = nominal;
+    this.selectedNominal$.emit(this.selectedNominal);
   }
 
   nominalClass(nominal: number) {
-    if (nominal === this.currentNominal) {
-      return 'selected-nominal';
+    if (nominal === this.selectedNominal) {
+      return 'selectedNominal';
     }
     return 'nominal';
   }
+
 }

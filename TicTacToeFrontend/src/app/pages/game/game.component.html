@@ -1,5 +1,5 @@
-<app-board (selectedField)="selectFieldNo($event)"></app-board>
-<app-nominals [playerNo]="playerNo$ | async" (selectedNominal)="selectNominal($event)"></app-nominals>
+<app-board (selectedField$)="selectFieldNo($event)"></app-board>
+<app-nominals [playerNo]="playerNo$ | async" (selectedNominal$)="selectNominal($event)"></app-nominals>
 <br>
 ======
 <ng-container *ngIf="game">
@@ -29,4 +29,4 @@
 <!--  <var *ngIf="winner === 2"> Player 2 </var>-->
 <!--</div>-->
 
-<button (click)="send()">send</button>
+<button mat-flat-button (click)="send()">send</button>

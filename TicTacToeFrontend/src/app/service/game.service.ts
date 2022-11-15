@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Subject} from "rxjs";
+import {BehaviorSubject} from "rxjs";
 import {GameData} from "../../model/GameData";
 
 @Injectable({
@@ -9,8 +9,7 @@ export class GameService {
 
   winner: number | undefined = -1;
 
-  game: GameData;
-  // game = new BehaviorSubject<GameData>(GameData.empty);
+  game = new BehaviorSubject<GameData>(GameData.empty);
   availableGames = new BehaviorSubject<string[]>([]);
   selectedNominal = new BehaviorSubject<number>(0);
   selectedFieldNo = new BehaviorSubject<number>(0);
@@ -19,12 +18,11 @@ export class GameService {
   constructor() { }
 
   setGame(game: GameData) {
-    this.game = game
+    this.game.next(game);
   }
 
   get getGameId() {
-    // return this.game.getValue().game.gameId;
-    return this.game.game.gameId;
+    return this.game.getValue().game.gameId;
   }
 
   set setWinner(winner: number) {
@@ -32,8 +30,8 @@ export class GameService {
   }
 
   updateGame(game: GameData) {
-    this.game = game;
-    this.winner = this.game?.whoWon == -1 ? -1 : this.game?.whoWon;
+    this.setGame(game);
+    this.winner = this.game.getValue().whoWon == -1 ? -1 : this.game.getValue().whoWon;
   }
 
   setPlayerNo(playerNo: number) {
@@ -42,19 +40,16 @@ export class GameService {
 
   selectFieldNo(fieldNo: number) {
     if (this.isGameFinished()) return;
-    if (this.game?.game.currentPlayer.no === this.playerNo.getValue()) {
+    if (this.game.getValue().game.currentPlayer.no === this.playerNo.getValue()) {
       this.selectedFieldNo.next(fieldNo);
-      console.log(this.selectedFieldNo.getValue());
     }
-
   }
 
   selectNominal(nominal: number) {
     if (this.isGameFinished()) return;
-    if (this.game?.game.currentPlayer.no === this.playerNo.getValue() && this.winner === -1) {
+    if (this.game.getValue().game.currentPlayer.no === this.playerNo.getValue() && this.winner === -1) {
       this.selectedNominal.next(nominal);
     }
-
   }
 
   private isGameFinished() {

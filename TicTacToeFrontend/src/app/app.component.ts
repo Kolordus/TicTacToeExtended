@@ -1,6 +1,4 @@
 import {Component, HostListener, OnDestroy} from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {EventService} from "./service/event.service";
 
 @Component({
   selector: 'app-root',
@@ -26,13 +24,6 @@ export class AppComponent  implements OnDestroy {
     //   )
     //   await Promise.all(promises);
     // }
-  }
-
-
-  getBackgroundColor(playerNo: number): string {
-    if (playerNo == 1) return 'red';
-    if (playerNo == 2) return 'yellow';
-    return 'white';
   }
 
 }

@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import pl.kolak.tictactoewebsocket.model.GameData;
 import pl.kolak.tictactoewebsocket.model.GameDataInput;
 import pl.kolak.tictactoewebsocket.services.GameService;
@@ -67,7 +68,6 @@ public class WebSocketController {
     @MessageMapping("/room/{gameId}")
     @SendTo("/room/{gameId}")
     public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
-
         if (playerDisconnected(payload)) {
             logEventDisconnect(gameId, payload);
             return GameData.EMPTY;
@@ -122,9 +122,10 @@ public class WebSocketController {
 
     }
 
-    @PatchMapping()
-    public void method() {
-        return ;
+    @EventListener
+    public void catchEvent(SessionUnsubscribeEvent event) {
+        System.out.println(event);
     }
+
 
 }
