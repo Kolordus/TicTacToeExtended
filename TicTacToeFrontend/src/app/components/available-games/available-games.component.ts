@@ -6,15 +6,12 @@ import {ConnectionService} from "../../service/connection.service";
   templateUrl: './available-games.component.html',
   styleUrls: ['./available-games.component.css']
 })
-export class AvailableGamesComponent implements OnInit {
+export class AvailableGamesComponent {
 
   @Input()
   games: string[] | null;
 
   constructor(private connection: ConnectionService) { }
-
-  ngOnInit(): void {
-  }
 
   async joinGame(gameId: string) {
     await this.connection.joinGame(gameId);

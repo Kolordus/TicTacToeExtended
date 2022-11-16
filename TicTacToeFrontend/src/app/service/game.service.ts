@@ -11,6 +11,7 @@ export class GameService {
 
   game = new BehaviorSubject<GameData>(GameData.empty);
   availableGames = new BehaviorSubject<string[]>([]);
+  // selectedNominal = new BehaviorSubject<number>(0);
   selectedNominal = new BehaviorSubject<number>(0);
   selectedFieldNo = new BehaviorSubject<number>(0);
   playerNo = new BehaviorSubject<number>(0);
@@ -23,6 +24,14 @@ export class GameService {
 
   get getGameId() {
     return this.game.getValue().game.gameId;
+  }
+
+  get getNominalToSend() {
+    return this.selectedNominal.getValue();
+  }
+
+  get getFieldNoToSend() {
+    return this.selectedFieldNo.getValue();
   }
 
   set setWinner(winner: number) {

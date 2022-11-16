@@ -8,6 +8,7 @@ import {BehaviorSubject, Observable} from "rxjs";
 import {Frame} from "stompjs";
 import {GameData} from "../../model/GameData";
 import {Router} from "@angular/router";
+import {Game} from "../../model/Game";
 
 @Injectable({
   providedIn: 'root'
@@ -31,25 +32,20 @@ export class ConnectionService {
     this.isUserNotConnected.next(!this.isConnected && !this.canContinue);
   }
 
-  async showAvailableGames() {
-    await this.http.get(Constants.connectionUrl + "games")
-      .subscribe(value => {
-        console.log(value);
-        // this.gameService.setAvailableGames = value as Array<string>;
-      })
-  }
-
   showOpenGames(): Observable<string[]> {
     return this.http.get(Constants.connectionUrl + "games") as Observable<string[]>;
   }
 
-  createGame() {
-    this.http.post(Constants.connectionUrl + "games", null)
+  async createGame() {
+    let createdGame: GameData = GameData.empty;
+
+
+    await this.http.post(Constants.connectionUrl + "games", null)
       .subscribe(async value =>  {
-        let createdGame = value as GameData;
-        this.gameService.setGame(createdGame);
+        createdGame = value as GameData;
+        await this.gameService.setGame(createdGame);
         await this.connectAndSubscribe(createdGame.game.gameId);
-        this.navigateToGame(createdGame.game.gameId);
+        await this.navigateToGame(createdGame.game.gameId);
       });
   }
 
@@ -61,57 +57,73 @@ export class ConnectionService {
     return this.http.get(Constants.connectionUrl + "games/" + gameId) as Observable<GameData>;
   }
 
-  joinGame(gameId: string) {
-    this.connectAndSubscribe(gameId);
-    this.getGame(gameId).subscribe(value => {
+  async joinGame(gameId: string) {
+    await this.getGame(gameId).subscribe(async value => {
         this.gameService.setGame(value as GameData);
         this.navigateToGame(gameId);
+        await this.connectAndSubscribe(gameId);
       }
-    )
+    );
+
   }
 
+  webSocketEndPoint: string = 'http://localhost:8080/game';
+  appPrefix: string = '/room';
   async connectAndSubscribe(gameId: string) {
-    await this._initializeConnection();
+    let ws = new SockJS(this.webSocketEndPoint);
+    this.stompClient = Stomp.over(ws);
+    const _this = this;
 
-    setTimeout(() => {}, 100);
+    await _this.stompClient.connect({}, async function () {
+      console.log("Initialize WebSocket Connection");
+    }, this.errorCallBack);
+
+    await _this.delay(100);
 
     // try connect to a game
-    this.stompClient.subscribe(Constants.appPrefix + '/' + gameId,
-      (msg: Frame) => {
-      console.log('halo???');
-      console.log(msg.body);
-      console.log('---');
-        this._showReceivedFromServer(msg);
+    await _this.stompClient.subscribe(_this.appPrefix + '/' + gameId, async (msg: Frame) => {
 
-        if (!this.isConnected) {
-          this._setPlayerNo(msg);
-          this._dontAllowConnectionIfTooManyPlayers(this.ws);
-        }
+      _this.showReceivedFromServer(msg);
 
-        this._prepareGameAfterSuccessfulSubscribe(gameId);
+      if (!_this.isConnected) {
+        this._setPlayerNo(msg, _this);
+        this._dontAllowConnectionIfTooManyPlayers(_this, ws);
+      }
+      await this._prepareGameAfterSuccessfulSubscribe(gameId, _this);
 
-        this._handleStateUpdate(msg);
+      this._handleStateUpdate(msg, _this);
 
-        this._handleDisconnection(msg, this.ws);
-      });
+      this._handleDisconnection(msg, _this, ws);
+    });
   };
 
+  showReceivedFromServer(message: Frame) {
+    console.log("Message Recieved from Server :: " + message);
+  }
+
+  errorCallBack(error: String) {
+    console.log("errorCallBack -> " + error)
+    setTimeout(() => {
+    }, 100);
+  }
+
+  delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async _initializeConnection() {
-    console.log('jedziemy z tym?')
-    await this.stompClient.connect({},async () => {
+    const _this = this;
+    await _this.stompClient.connect({},  () => {
       console.log("Initialize WebSocket Connection");
-      console.log('jedziemy z tym2?')
     }, this._errorCallBack);
-    console.log('jedziemy z tym? 3')
   }
 
   send() {
-    console.log(this.stompClient);
     this.stompClient.send(Constants.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
       gameId: this.gameService.getGameId,
-      fieldNo: this.gameService.selectedFieldNo.getValue(),
-      nominal: this.gameService.selectedNominal.getValue()
-    }))
+      fieldNo: this.gameService.getFieldNoToSend,
+      nominal: this.gameService.getNominalToSend
+    }));
 
     this.gameService.resetNominalAndField();
   }
@@ -127,7 +139,7 @@ export class ConnectionService {
     // }, 5000);
   }
 
-  protected _setPlayerNo(msg: Frame) {
+  protected _setPlayerNo(msg: Frame, _this: this) {
     let playerNo = msg.body;
     if (Constants.PLAYER_NUMBERS.includes(playerNo as string)) {
       this.isUserNotConnected.next(false);
@@ -136,15 +148,15 @@ export class ConnectionService {
     }
   }
 
-  protected _dontAllowConnectionIfTooManyPlayers(ws: WebSocket) {
-    if (!this.canContinue) {
-      this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
-      this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
+  protected _dontAllowConnectionIfTooManyPlayers(_this: this, ws: WebSocket) {
+    if (!_this.canContinue) {
+      _this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
+      _this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
       ws.close();
     }
   }
 
-  protected _prepareGameAfterSuccessfulSubscribe(gameId: string) {
+  protected _prepareGameAfterSuccessfulSubscribe(gameId: string, _this: this) {
     if (!this.gameReceived) {
       this.getGame(gameId);
       setTimeout(() => {}, 200);
@@ -152,16 +164,15 @@ export class ConnectionService {
     }
   }
 
-  protected _handleStateUpdate(msg: Frame) { // todo - to będzie do ogarnięcia
-    console.log(msg);
+  protected _handleStateUpdate(msg: Frame, _this: this) { // todo - to będzie do ogarnięcia
+    // próbować przywrócić działający stan rzeczy -> chyba ten _this nie wziął się znika :/
     if (msg.body.includes('gameId')) {
       let indexWherePayloadStarts = msg.toString().indexOf("{\"game");
-      console.log(msg.body);
       this.gameService.updateGame(JSON.parse(msg.toString().slice(indexWherePayloadStarts)) as GameData)
     }
   }
 
-  protected _handleDisconnection(msg: Frame, ws: WebSocket) {
+  protected _handleDisconnection(msg: Frame, _this: this, ws: WebSocket) {
     if (msg.body.includes('surrenders')) {
       let number = msg.toString().indexOf("{\"surrenders");
       let surrendedPlayer = JSON.parse(msg.toString().slice(number));
@@ -178,4 +189,20 @@ export class ConnectionService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  async disconnect() {
+    let promises = [];
+
+    promises.push(
+      this.http.put(Constants.connectionUrl + 'games/' + this.gameService.getGameId, null)
+        .subscribe(_ => {})
+    );
+
+    promises.push(
+      this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
+        surrenders: this.gameService.playerNo.getValue()
+      }))
+    );
+
+    await Promise.all(promises);
+  }
 }

@@ -3,9 +3,8 @@
     <button mat-raised-button
             [ngClass]="buttonClass(field.playerNo)"
             class="paddingMargin"
-            [class.selected]="isSelected(field.fieldNo)"
-    >
-       s
+            [class.selected]="isSelected(field.fieldNo)">
+      <var *ngIf="field.currentNominal > 0">{{ field.currentNominal }}</var>
     </button>
   </span>
   <div *ngIf="(i+1) % 3 == 0"></div>

@@ -67,7 +67,7 @@ public class WebSocketController {
      */
     @MessageMapping("/room/{gameId}")
     @SendTo("/room/{gameId}")
-    public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
+    public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) throws InterruptedException {
         if (playerDisconnected(payload)) {
             logEventDisconnect(gameId, payload);
             return GameData.EMPTY;
@@ -118,14 +118,8 @@ public class WebSocketController {
     }
 
     @EventListener
-    public void catchEvent(ApplicationReadyEvent event) {
-
-    }
-
-    @EventListener
     public void catchEvent(SessionUnsubscribeEvent event) {
         System.out.println(event);
     }
-
 
 }
