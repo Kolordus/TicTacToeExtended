@@ -11,10 +11,9 @@ export class GameService {
 
   game = new BehaviorSubject<GameData>(GameData.empty);
   availableGames = new BehaviorSubject<string[]>([]);
-  // selectedNominal = new BehaviorSubject<number>(0);
-  selectedNominal = new BehaviorSubject<number>(0);
-  selectedFieldNo = new BehaviorSubject<number>(0);
   playerNo = new BehaviorSubject<number>(0);
+  selectedNominal: number = 0;
+  selectedFieldNo: number = 0;
 
   constructor() { }
 
@@ -27,11 +26,11 @@ export class GameService {
   }
 
   get getNominalToSend() {
-    return this.selectedNominal.getValue();
+    return this.selectedNominal;
   }
 
   get getFieldNoToSend() {
-    return this.selectedFieldNo.getValue();
+    return this.selectedFieldNo;
   }
 
   set setWinner(winner: number) {
@@ -44,21 +43,26 @@ export class GameService {
   }
 
   setPlayerNo(playerNo: number) {
-    this.playerNo.next(playerNo);
+    this.playerNo.next(playerNo)
   }
 
   selectFieldNo(fieldNo: number) {
     if (this.isGameFinished()) return;
     if (this.game.getValue().game.currentPlayer.no === this.playerNo.getValue()) {
-      this.selectedFieldNo.next(fieldNo);
+      this.selectedFieldNo = fieldNo;
     }
+
+    console.log(this.selectedFieldNo);
   }
 
   selectNominal(nominal: number) {
     if (this.isGameFinished()) return;
     if (this.game.getValue().game.currentPlayer.no === this.playerNo.getValue() && this.winner === -1) {
-      this.selectedNominal.next(nominal);
+      this.selectedNominal = nominal;
     }
+
+    console.log(this.selectedNominal);
+
   }
 
   private isGameFinished() {
@@ -66,7 +70,7 @@ export class GameService {
   }
 
   resetNominalAndField() {
-    this.selectedFieldNo.next(0);
-    this.selectedNominal.next(0);
+    this.selectedFieldNo = 0;
+    this.selectedNominal = 0;
   }
 }

@@ -3,12 +3,11 @@ import {HttpClient} from "@angular/common/http";
 import {GameService} from "./game.service";
 import * as SockJS from "sockjs-client";
 import * as Stomp from "stompjs";
+import {Frame} from "stompjs";
 import {Constants} from "../../model/Constants";
 import {BehaviorSubject, Observable} from "rxjs";
-import {Frame} from "stompjs";
 import {GameData} from "../../model/GameData";
 import {Router} from "@angular/router";
-import {Game} from "../../model/Game";
 
 @Injectable({
   providedIn: 'root'
@@ -39,9 +38,8 @@ export class ConnectionService {
   async createGame() {
     let createdGame: GameData = GameData.empty;
 
-
     await this.http.post(Constants.connectionUrl + "games", null)
-      .subscribe(async value =>  {
+      .subscribe(async value => {
         createdGame = value as GameData;
         await this.gameService.setGame(createdGame);
         await this.connectAndSubscribe(createdGame.game.gameId);
@@ -64,11 +62,11 @@ export class ConnectionService {
         await this.connectAndSubscribe(gameId);
       }
     );
-
   }
 
   webSocketEndPoint: string = 'http://localhost:8080/game';
   appPrefix: string = '/room';
+
   async connectAndSubscribe(gameId: string) {
     let ws = new SockJS(this.webSocketEndPoint);
     this.stompClient = Stomp.over(ws);
@@ -113,7 +111,7 @@ export class ConnectionService {
 
   async _initializeConnection() {
     const _this = this;
-    await _this.stompClient.connect({},  () => {
+    await _this.stompClient.connect({}, () => {
       console.log("Initialize WebSocket Connection");
     }, this._errorCallBack);
   }
@@ -159,7 +157,8 @@ export class ConnectionService {
   protected _prepareGameAfterSuccessfulSubscribe(gameId: string, _this: this) {
     if (!this.gameReceived) {
       this.getGame(gameId);
-      setTimeout(() => {}, 200);
+      setTimeout(() => {
+      }, 200);
       this.gameReceived = true;
     }
   }
@@ -190,11 +189,14 @@ export class ConnectionService {
   }
 
   async disconnect() {
+    if (!this.gameService.getGameId) return;
+
     let promises = [];
 
     promises.push(
       this.http.put(Constants.connectionUrl + 'games/' + this.gameService.getGameId, null)
-        .subscribe(_ => {})
+        .subscribe(_ => {
+        })
     );
 
     promises.push(

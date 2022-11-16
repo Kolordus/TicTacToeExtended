@@ -12,10 +12,7 @@ import {ConnectionService} from "../../service/connection.service";
 export class GameComponent implements OnInit, OnDestroy {
 
   game: GameData;
-
   playerNo$ = this.gameService.playerNo;
-  selectedNominal$ = this.gameService.selectedNominal;
-  selectedFieldNo$ = this.gameService.selectedFieldNo;
 
   constructor(private route: ActivatedRoute,
               private gameService: GameService,
@@ -41,15 +38,23 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   canSend() {
-    return this.valuesSelected() || this.isCurrentsPlayerTurn();
+    return this.valuesSelected() || this.isCurrentsPlayerTurn() || this.isCorrectNominalSelected();
   }
 
   valuesSelected() {
-    return this.selectedNominal$.getValue() == 0 || this.selectedFieldNo$.getValue() == 0;
+    return this.gameService.selectedNominal == 0 || this.gameService.getFieldNoToSend == 0;
   }
 
   isCurrentsPlayerTurn() {
-    return this.game.game.currentPlayer.no != this.playerNo$.getValue();
+    return this.game.game.currentPlayer.no != this.gameService.playerNo.getValue();
+  }
+
+  isCorrectNominalSelected() {
+    if (this.gameService.selectedNominal) {
+      let valueAtField = this.game.game.board[this.gameService.getFieldNoToSend-1];
+      return !(this.gameService.selectedNominal > valueAtField.currentNominal);
+    }
+    return true;
   }
 
   @HostListener('window:beforeunload')

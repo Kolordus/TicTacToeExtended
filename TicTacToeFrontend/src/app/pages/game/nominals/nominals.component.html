@@ -1,27 +1,25 @@
+<div *ngIf="game.game">
+  <div *ngIf="playerNo == 1">
+    <ng-container>
+      <var *ngFor="let nominal of game.game.player1.nominalsLeft" (click)="selectNominal(nominal)">
+        <button mat-stroked-button
+                [ngClass]="nominalClass(nominal)"
+                class="default-nominal">
+          {{ nominal }}
+        </button>
+      </var>
+    </ng-container>
+  </div>
 
-<div *ngIf="playerNo == 1">
-  <ng-container>
-    <var *ngFor="let nominal of game.game.player1.nominalsLeft" (click)="selectNominal(nominal)">
-      <button mat-stroked-button
-              [ngClass]="nominalClass(nominal)"
-              class="default-nominal">
-        {{ nominal }}
-      </button>
-    </var>
-  </ng-container>
+  <div *ngIf="playerNo == 2">
+    <ng-container>
+      <var *ngFor="let nominal of game.game.player2.nominalsLeft" (click)="selectNominal(nominal)">
+        <button mat-stroked-button
+                [ngClass]="nominalClass(nominal)"
+                class="default-nominal">
+          {{ nominal }}
+        </button>
+      </var>
+    </ng-container>
+  </div>
 </div>
-
-<div *ngIf="playerNo == 2">
-  <ng-container>
-    <var *ngFor="let nominal of game.game.player2.nominalsLeft" (click)="selectNominal(nominal)">
-      <button mat-stroked-button
-              [ngClass]="nominalClass(nominal)"
-              class="default-nominal">
-        {{ nominal }}
-      </button>
-    </var>
-  </ng-container>
-</div>
-
-
-

@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/")
-@CrossOrigin(value = "*")
+@CrossOrigin(value = "http://localhost:4200")
 public class WebSocketController {
 
     private final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
