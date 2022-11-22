@@ -3,6 +3,7 @@ import {ActivatedRoute} from "@angular/router";
 import {GameService} from "../../service/game.service";
 import {GameData} from "../../../model/GameData";
 import {ConnectionService} from "../../service/connection.service";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'app-game',
@@ -11,6 +12,7 @@ import {ConnectionService} from "../../service/connection.service";
 })
 export class GameComponent implements OnInit, OnDestroy {
 
+  sub = new Subscription();
   game$: GameData;
   playerNo$ = this.gameService.playerNo;
 
@@ -20,9 +22,10 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.gameService.game.subscribe(value => {
+    let subscription = this.gameService.game.subscribe(value => {
       this.game$ = value;
     });
+    this.sub.add(subscription);
   }
 
   selectFieldNo(fieldNo: number) {
@@ -59,6 +62,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
+    this.sub.unsubscribe();
     if (this.game$.game.gameId !== null) {
       await this.connection.disconnect();
     }

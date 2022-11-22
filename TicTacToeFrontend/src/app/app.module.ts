@@ -17,6 +17,7 @@ import { NominalsComponent } from './pages/game/nominals/nominals.component';
 import { BoardComponent } from './pages/game/board/board.component';
 import {MatCardModule} from "@angular/material/card";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import { PlayerComponent } from './pages/game/player/player.component';
 
 @NgModule({
   declarations: [
@@ -27,6 +28,7 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     AvailableGamesComponent,
     NominalsComponent,
     BoardComponent,
+    PlayerComponent,
   ],
   imports: [
     BrowserModule,

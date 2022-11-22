@@ -1,3 +1,4 @@
+<app-player>{{ playerNo$ | async }}</app-player>
 <app-board (selectedField$)="selectFieldNo($event)"></app-board>
 <app-nominals [playerNo]="playerNo$ | async" (selectedNominal$)="selectNominal($event)"></app-nominals>
 <br>

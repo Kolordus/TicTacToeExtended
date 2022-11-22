@@ -147,9 +147,6 @@ export class ConnectionService {
 
   _errorCallBack(error: String) {
     console.log("errorCallBack -> " + error)
-    // setTimeout(async () => {
-    //   await this.connectAndSubscribe();
-    // }, 5000);
   }
 
   protected _setPlayerNo(msg: Frame, _this: this) {

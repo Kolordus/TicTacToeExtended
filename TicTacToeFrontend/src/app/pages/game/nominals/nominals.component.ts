@@ -37,6 +37,7 @@ export class NominalsComponent implements OnInit, OnDestroy {
   selectNominal(nominal: number) {
     this.selectedNominal = nominal;
     this.selectedNominal$.emit(this.selectedNominal);
+    // this
   }
 
   nominalClass(nominal: number) {
