@@ -1,4 +1,4 @@
-<app-player>{{ playerNo$ | async }}</app-player>
+<app-player [playerNo]="playerNo$ | async" [game]="this.game$"></app-player>
 <app-board [game]="this.game$" (selectedField$)="selectFieldNo($event)"></app-board>
 <app-nominals [playerNo]="playerNo$ | async" [game]="this.game$" (selectedNominal$)="selectNominal($event)"></app-nominals>
 <br>

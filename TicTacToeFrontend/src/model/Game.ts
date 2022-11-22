@@ -3,7 +3,7 @@ import {Player} from "./Player";
 
 export class Game {
 
-  static emtpy = new Game('', [], new Player(0, []), new Player(0, []), new Player(0, []));
+  static EMPTY = new Game('', [], new Player(0, []), new Player(0, []), new Player(0, []));
 
   gameId: string;
   board: Array<Field>;

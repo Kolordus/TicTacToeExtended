@@ -9,7 +9,7 @@ export class GameService {
 
   winner: number | undefined = -1;
 
-  game$ = new BehaviorSubject<GameData>(GameData.empty);
+  game$ = new BehaviorSubject<GameData>(GameData.EMPTY);
   playerNo$ = new BehaviorSubject<number>(0);
 
   selectedNominal: number = 0;

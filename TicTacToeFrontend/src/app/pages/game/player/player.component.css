@@ -1,0 +1,22 @@
+.red-player {
+  background-color: red;
+  color: white;
+  width: 10px;
+  height: 10px;
+  text-align: center;
+  align-content: center;
+}
+
+.blue-player {
+  background-color: blue;
+  color: white;
+  width: 10px;
+  height: 10px;
+  text-align: center;
+  align-content: center;
+}
+
+.player-desc {
+  padding-top: 10px;
+  font-size: 20px;
+}

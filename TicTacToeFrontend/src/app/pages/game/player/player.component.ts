@@ -9,8 +9,14 @@ import {GameData} from "../../../../model/GameData";
 export class PlayerComponent {
 
   @Input()
-  game$: GameData;
+  game: GameData;
+
+  @Input()
+  playerNo: number | null;
 
   constructor() { }
 
+  playerColour() {
+    return this.playerNo == 1 ? 'red-player' : 'blue-player';
+  }
 }

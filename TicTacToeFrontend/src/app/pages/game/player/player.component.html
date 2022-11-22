@@ -1,8 +1,12 @@
 <div>
-  You are player no:
-  <ng-content></ng-content>
-  <br>
-  Your colour is:
-  <br>
-  current player: {{game$.game.currentPlayer.no}}
+  <span class="player-desc">
+    You are player no: <mat-card [ngClass]="playerColour()">{{playerNo}}</mat-card>
+  </span>
+  <div *ngIf="game.game && game.whoWon != 0">
+    <var *ngIf="game.game.currentPlayer.no == playerNo; else opponent">Your turn</var>
+  </div>
+
+  <ng-template #opponent>
+    Oponents turn
+  </ng-template>
 </div>

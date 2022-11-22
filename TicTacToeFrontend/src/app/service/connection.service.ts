@@ -36,7 +36,7 @@ export class ConnectionService {
   }
 
   async createGame() {
-    let createdGame: GameData = GameData.empty;
+    let createdGame: GameData = GameData.EMPTY;
 
     await this.http.post(Constants.connectionUrl + "games", null)
       .subscribe(async value => {
@@ -124,13 +124,6 @@ export class ConnectionService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async _initializeConnection() {
-    const _this = this;
-    await _this.stompClient.connect({}, () => {
-      console.log("Initialize WebSocket Connection");
-    }, this._errorCallBack);
-  }
-
   send() {
     this.stompClient.send(Constants.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
       gameId: this.gameService.getGameId,
@@ -139,14 +132,6 @@ export class ConnectionService {
     }));
 
     this.gameService.resetNominalAndField();
-  }
-
-  _showReceivedFromServer(message: Frame) {
-    console.log("Message Recieved from Server :: " + message);
-  }
-
-  _errorCallBack(error: String) {
-    console.log("errorCallBack -> " + error)
   }
 
   protected _setPlayerNo(msg: Frame, _this: this) {
@@ -176,7 +161,6 @@ export class ConnectionService {
   }
 
   protected _handleStateUpdate(msg: Frame, _this: this) { // todo - to będzie do ogarnięcia
-    // próbować przywrócić działający stan rzeczy -> chyba ten _this nie wziął się znika :/
     if (msg.body.includes('gameId')) {
       let indexWherePayloadStarts = msg.toString().indexOf("{\"game");
       this.gameService.updateGame(JSON.parse(msg.toString().slice(indexWherePayloadStarts)) as GameData)
@@ -194,10 +178,6 @@ export class ConnectionService {
       this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
       ws.close();
     }
-  }
-
-  _delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async disconnect() {
