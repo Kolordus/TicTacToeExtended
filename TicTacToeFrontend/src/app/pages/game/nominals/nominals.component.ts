@@ -23,7 +23,7 @@ export class NominalsComponent implements OnInit, OnDestroy {
   constructor(private gameService: GameService) { }
 
   async ngOnInit() {
-    let subscription = await this.gameService.game.subscribe(value => {
+    let subscription = await this.gameService.game$.subscribe(value => {
       this.game = value;
     });
 

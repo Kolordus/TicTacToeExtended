@@ -8,6 +8,7 @@ public class VictoryChecker {
     public static final int NO_ONE = -1;
     public static final int PLAYER_1 = 1;
     public static final int PLAYER_2 = 2;
+    public static final int DRAW = 0;
     private static final List<Integer> ROW_1 = List.of(1, 2, 3);
     private static final List<Integer> ROW_2 = List.of(4, 5, 6);
     private static final List<Integer> ROW_3 = List.of(7, 8, 9);
@@ -25,14 +26,24 @@ public class VictoryChecker {
     private List<Field> board;
 
     public int checkForWinner(Game game) {
-        this.board = game.getBoard();
+        int result = VictoryChecker.NO_ONE;
 
+        this.board = game.getBoard();
         for (List<Integer> rowOrColumn : cartesian) {
             int winner = checkRowOrColumnForVictory(rowOrColumn);
             if (winner > 0)
-                return winner;
+                result = winner;
         }
-        return -1;
+
+        if (draw(game))
+            result = VictoryChecker.DRAW;
+
+        return result;
+    }
+
+    private boolean draw(Game game) {
+        return game.getPlayer1().getNominalsLeft().isEmpty()
+                && game.getPlayer2().getNominalsLeft().isEmpty();
     }
 
     private int checkRowOrColumnForVictory(List<Integer> rowOrColumn) {

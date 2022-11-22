@@ -41,12 +41,9 @@ public class GameService {
     }
 
     public GameData updateGame(String gameId, GameDataInput gameDataInput) {
-        GameData gameData = updateGameAndCheckVictory(gameId,
+        return updateGameAndCheckVictory(gameId,
                 Integer.parseInt(gameDataInput.fieldNo()),
                 Integer.parseInt(gameDataInput.nominal()));
-
-
-        return gameData;
     }
 
     private GameData updateGameAndCheckVictory(String gameId, int fieldNo, int nominal) {
@@ -71,6 +68,7 @@ public class GameService {
 
     private GameData checkVictory(String gameId, Game game) {
         GameData result;
+
         int winner = victoryChecker.checkForWinner(game);
         if (winner == VictoryChecker.NO_ONE) {
             games.put(gameId, game);
@@ -79,6 +77,7 @@ public class GameService {
         else {
             result = new GameData(games.remove(gameId), winner);
         }
+
         return result;
     }
 

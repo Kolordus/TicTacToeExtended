@@ -4,10 +4,11 @@
 
 <button mat-flat-button (click)="send()" [disabled]="canSend()">send</button>
 
-<div *ngIf="game.whoWon !== -1">
+<div *ngIf="game$.whoWon !== -1">
   <hr/>
   <br/>
   Winner:
-  <var *ngIf="game.whoWon === 1"> Player 1 </var>
-  <var *ngIf="game.whoWon === 2"> Player 2 </var>
+  <var *ngIf="game$.whoWon === 1"> Player 1 </var>
+  <var *ngIf="game$.whoWon === 2"> Player 2 </var>
+  <var *ngIf="game$.whoWon === 0"> Remis </var>
 </div>

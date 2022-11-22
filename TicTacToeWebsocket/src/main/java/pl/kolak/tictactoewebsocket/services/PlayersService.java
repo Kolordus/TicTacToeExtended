@@ -15,7 +15,6 @@ public class PlayersService {
 
     private final Map<String, Integer> playersAtGame;
 
-
     public PlayersService() {
         this.playersAtGame = new HashMap<>(64);
     }
@@ -41,7 +40,9 @@ public class PlayersService {
     }
 
     public void deleteGameIfOver(GameData gameData) {
-        if (gameData.whoWon() != VictoryChecker.NO_ONE) {
+        int result = gameData.whoWon();
+
+        if (result != VictoryChecker.NO_ONE) {
             this.playersAtGame.remove(gameData.game().getGameId());
         }
     }

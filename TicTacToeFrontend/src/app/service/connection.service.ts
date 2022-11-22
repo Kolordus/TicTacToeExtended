@@ -78,6 +78,9 @@ export class ConnectionService {
 
     await _this.delay(100);
 
+    // refreshing feature
+    // this.setDataInlocalStorage(_this.ws._transport.url, gameId);
+
     // try connect to a game
     await _this.stompClient.subscribe(_this.appPrefix + '/' + gameId, async (msg: Frame) => {
 
@@ -94,6 +97,18 @@ export class ConnectionService {
       this._handleDisconnection(msg, _this, ws);
     });
   };
+
+  // tbd
+  // private setDataInlocalStorage(url: string, gameId: string) {
+  //   let lastSlash = url.lastIndexOf('/');
+  //   let game = url.lastIndexOf('game/')
+  //
+  //   let trimed = url.substring(game, lastSlash)
+  //   trimed = trimed.replace('game/', '');
+  //   trimed += '/' + gameId
+  //
+  //   localStorage.setItem(Constants.WS_LS, trimed);
+  // }
 
   showReceivedFromServer(message: Frame) {
     console.log("Message Recieved from Server :: " + message);
@@ -119,8 +134,8 @@ export class ConnectionService {
   send() {
     this.stompClient.send(Constants.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
       gameId: this.gameService.getGameId,
-      fieldNo: this.gameService.getFieldNoToSend,
-      nominal: this.gameService.getNominalToSend
+      fieldNo: this.gameService.fieldNoToSend,
+      nominal: this.gameService.nominalToSend
     }));
 
     this.gameService.resetNominalAndField();
@@ -201,7 +216,7 @@ export class ConnectionService {
 
     promises.push(
       this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
-        surrenders: this.gameService.playerNo.getValue()
+        surrenders: this.gameService.playerNo$.getValue()
       }))
     );
 

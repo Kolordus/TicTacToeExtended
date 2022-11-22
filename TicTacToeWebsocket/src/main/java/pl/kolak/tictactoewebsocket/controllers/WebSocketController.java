@@ -18,12 +18,13 @@ import pl.kolak.tictactoewebsocket.model.GameData;
 import pl.kolak.tictactoewebsocket.model.GameDataInput;
 import pl.kolak.tictactoewebsocket.services.GameService;
 import pl.kolak.tictactoewebsocket.services.PlayersService;
+import pl.kolak.tictactoewebsocket.util.Constants;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/")
-@CrossOrigin(value = "http://localhost:4200")
+@CrossOrigin(value = Constants.CORS_URL)
 public class WebSocketController {
 
     private final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
@@ -67,7 +68,7 @@ public class WebSocketController {
      */
     @MessageMapping("/room/{gameId}")
     @SendTo("/room/{gameId}")
-    public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) throws InterruptedException {
+    public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
         if (playerDisconnected(payload)) {
             logEventDisconnect(gameId, payload);
             return GameData.EMPTY;
@@ -82,6 +83,15 @@ public class WebSocketController {
 
     @SubscribeMapping("/room/{gameId}")
     public int subscribe(@DestinationVariable String gameId, SimpMessageHeaderAccessor headerAccessor) {
+
+        /*
+        zapisać sessionID()
+        jeśli ktoś wbija w hashmapie oraz w localStorage
+
+        zwrócić
+         */
+
+        System.out.println(headerAccessor.getSessionId());
         int playersAtGame = 0;
 
         if (playersService.gameExist(gameId)) {

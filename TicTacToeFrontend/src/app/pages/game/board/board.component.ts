@@ -25,7 +25,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    let subscription = this.gameService.game.subscribe(value => {
+    let subscription = this.gameService.game$.subscribe(value => {
       this.game = value;
     });
     this.subscriptions.add(subscription);

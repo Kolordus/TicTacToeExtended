@@ -11,7 +11,7 @@ import {ConnectionService} from "../../service/connection.service";
 })
 export class GameComponent implements OnInit, OnDestroy {
 
-  game: GameData;
+  game$: GameData;
   playerNo$ = this.gameService.playerNo;
 
   constructor(private route: ActivatedRoute,
@@ -21,7 +21,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.gameService.game.subscribe(value => {
-      this.game = value;
+      this.game$ = value;
     });
   }
 
@@ -42,16 +42,16 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   valuesSelected() {
-    return this.gameService.selectedNominal == 0 || this.gameService.getFieldNoToSend == 0;
+    return this.gameService.selectedNominal == 0 || this.gameService.fieldNoToSend == 0;
   }
 
   isCurrentsPlayerTurn() {
-    return this.game.game.currentPlayer.no != this.gameService.playerNo.getValue();
+    return this.game$.game.currentPlayer.no != this.gameService.playerNo$.getValue();
   }
 
   isCorrectNominalSelected() {
     if (this.gameService.selectedNominal) {
-      let valueAtField = this.game.game.board[this.gameService.getFieldNoToSend-1];
+      let valueAtField = this.game$.game.board[this.gameService.fieldNoToSend-1];
       return !(this.gameService.selectedNominal > valueAtField.currentNominal);
     }
     return true;
@@ -59,7 +59,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
-    if (this.game.game.gameId !== null) {
+    if (this.game$.game.gameId !== null) {
       await this.connection.disconnect();
     }
   }

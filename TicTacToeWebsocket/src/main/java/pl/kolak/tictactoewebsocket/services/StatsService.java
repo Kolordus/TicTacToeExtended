@@ -19,16 +19,14 @@ public class StatsService {
         this.gameService = gameService;
     }
 
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "*/20 * * * * *")
     public void showStats() {
-        Map<String, Integer> games = playersService.getGames();
-
-        games.forEach((key, integer) -> logger.info("from Controller: At game {} there is {} players", key, integer));
+        playersService.getGames()
+                .forEach((key, integer) -> logger.info("from Controller: At game {} there is {} players", key, integer));
 
         int size = gameService.getGamesForStats().keySet().size();
 
         if (size > 0)
             logger.info("from gameservice: {} games", gameService.getGamesForStats().keySet().size());
-
     }
 }

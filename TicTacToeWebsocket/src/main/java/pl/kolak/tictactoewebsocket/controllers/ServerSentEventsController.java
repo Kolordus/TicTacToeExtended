@@ -20,6 +20,11 @@ public class ServerSentEventsController {
 
     private final Map<String, SseEmitter> emiters = new HashMap<>();
 
+//    @GetMapping
+//    public String index() {
+//        return "index";
+//    }
+
     @GetMapping("/sse/{name}")
     public ResponseEntity<SseEmitter> createSseTopic(@PathVariable String name) {
         SseEmitter emitter = new SseEmitter();

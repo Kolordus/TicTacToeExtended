@@ -68,7 +68,6 @@ class GameTest {
         game.newInput(9, 2);
         game.getStats();
         assertEquals(PLAYER_1, victoryChecker.checkForWinner(game));
-
     }
 
     @Test
@@ -114,6 +113,24 @@ class GameTest {
 
         assertEquals(PLAYER_2, victoryChecker.checkForWinner(game));
 
+    }
+
+    @Test
+    public void draw() {
+        Game game = new Game();
+
+        game.newInput(1,1); //1
+        game.newInput(1,2); //2
+        game.newInput(1,3); //1
+        game.newInput(1,4); //2
+        game.newInput(1,5); //1
+        game.newInput(2,1); //2
+        game.newInput(2,2); //1
+        game.newInput(2,3); //2
+        game.newInput(2,4); //1
+        game.newInput(2,5); //2
+
+        assertEquals(DRAW, new VictoryChecker().checkForWinner(game));
     }
 
     @Test

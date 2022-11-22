@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Observable} from "rxjs";
 import {GameData} from "../../model/GameData";
 
 @Injectable({
@@ -9,27 +9,31 @@ export class GameService {
 
   winner: number | undefined = -1;
 
-  game = new BehaviorSubject<GameData>(GameData.empty);
-  availableGames = new BehaviorSubject<string[]>([]);
-  playerNo = new BehaviorSubject<number>(0);
+  game$ = new BehaviorSubject<GameData>(GameData.empty);
+  playerNo$ = new BehaviorSubject<number>(0);
+
   selectedNominal: number = 0;
   selectedFieldNo: number = 0;
 
   constructor() { }
 
   setGame(game: GameData) {
-    this.game.next(game);
+    this.game$.next(game);
   }
 
-  get getGameId() {
-    return this.game.getValue().game.gameId;
+  get game(): Observable<GameData> {
+    return this.game$.asObservable();
   }
 
-  get getNominalToSend() {
+  get getGameId(): string {
+    return this.game$.getValue().game.gameId;
+  }
+
+  get nominalToSend(): number {
     return this.selectedNominal;
   }
 
-  get getFieldNoToSend() {
+  get fieldNoToSend(): number {
     return this.selectedFieldNo;
   }
 
@@ -39,30 +43,29 @@ export class GameService {
 
   updateGame(game: GameData) {
     this.setGame(game);
-    this.winner = this.game.getValue().whoWon == -1 ? -1 : this.game.getValue().whoWon;
+    this.winner = this.game$.getValue().whoWon == -1 ? -1 : this.game$.getValue().whoWon;
   }
 
   setPlayerNo(playerNo: number) {
-    this.playerNo.next(playerNo)
+    this.playerNo$.next(playerNo)
+  }
+
+  get playerNo():Observable<number> {
+    return this.playerNo$.asObservable();
   }
 
   selectFieldNo(fieldNo: number) {
     if (this.isGameFinished()) return;
-    if (this.game.getValue().game.currentPlayer.no === this.playerNo.getValue()) {
+    if (this.game$.getValue().game.currentPlayer.no === this.playerNo$.getValue()) {
       this.selectedFieldNo = fieldNo;
     }
-
-    console.log(this.selectedFieldNo);
   }
 
   selectNominal(nominal: number) {
     if (this.isGameFinished()) return;
-    if (this.game.getValue().game.currentPlayer.no === this.playerNo.getValue() && this.winner === -1) {
+    if (this.game$.getValue().game.currentPlayer.no === this.playerNo$.getValue() && this.winner === -1) {
       this.selectedNominal = nominal;
     }
-
-    console.log(this.selectedNominal);
-
   }
 
   private isGameFinished() {
