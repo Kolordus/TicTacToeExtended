@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import pl.kolak.tictactoewebsocket.util.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,23 +13,40 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Controller
-@CrossOrigin(value = "*")
+@CrossOrigin(value = Constants.CORS_URL)
 public class ServerSentEventsController {
 
     private final ExecutorService nonBlockingService =
             Executors.newCachedThreadPool();
 
-    private final Map<String, SseEmitter> emiters = new HashMap<>();
+    private final SseEmitter emitter = new SseEmitter();
 
-//    @GetMapping
-//    public String index() {
-//        return "index";
-//    }
+    @GetMapping("/sse/lobby")
+    public ResponseEntity<SseEmitter> getSse() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(emitter);
+    }
 
-    @GetMapping("/sse/{name}")
+    @PostMapping("/sse/lobby")
+    public ResponseEntity<?> sendToSseTopic(@RequestBody String body) {
+        nonBlockingService.execute(() -> {
+            try {
+                emitter.send(body);
+            } catch (Exception ex) {
+                emitter.completeWithError(ex);
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+}
+
+
+/* tu jest ciekawostka jak to rozbić na poszczególne pokoje
+@GetMapping("/sse/{name}")
     public ResponseEntity<SseEmitter> createSseTopic(@PathVariable String name) {
         SseEmitter emitter = new SseEmitter();
-        emiters.put(name, emitter);
+        emitters.put(name, emitter);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(emitter);
@@ -42,7 +60,7 @@ public class ServerSentEventsController {
                     .body("No topic with name: " + name);
         }
 
-        SseEmitter emitter = emiters.get(name);
+        SseEmitter emitter = emitters.get(name);
         nonBlockingService.execute(() -> {
             try {
                 emitter.send(body);
@@ -53,7 +71,8 @@ public class ServerSentEventsController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private boolean noSuchTopic(String name) {
-        return !emiters.containsKey(name);
+        private boolean noSuchTopic(String name) {
+        return !emitters.containsKey(name);
     }
-}
+
+ */

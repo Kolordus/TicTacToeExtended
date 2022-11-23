@@ -1,6 +1,4 @@
-<div *ngIf="this.isUserNotConnected$ | async">
-  <app-available-games [games]="this.availableGames$ | async"></app-available-games>
-</div>
+<app-available-games [games]="this.availableGames$ | async"></app-available-games>
 
 <button mat-raised-button color="primary" (click)="createGameAndConnect()">
   create game

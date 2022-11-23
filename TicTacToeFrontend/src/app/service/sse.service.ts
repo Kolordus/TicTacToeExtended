@@ -1,38 +1,45 @@
-import { Injectable } from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
+import {Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
 })
 export class SseService {
 
-  constructor(private http: HttpClient) {}
-
+  constructor(private http: HttpClient, private _zone: NgZone) {
+  }
 
   getEventSource(url: string): EventSource {
     return new EventSource(url);
   }
 
-  getSse() {
-    this.http.get('http://localhost:8080/')
-      .subscribe(value => {
-        console.log(value);
-      });
+  subscribeToLobby() {
+    return this.getServerSentEvent("http://localhost:8080/sse/lobby");
   }
 
-  sendSse() {
+  sendSse(gameId: string) {
     this.http
-      .post("http://localhost:8080/sse/room1", 'test message')
+      .post("http://localhost:8080/sse/lobby", JSON.stringify(gameId))
       .subscribe(_ => _);
   }
 
-  cos() {
-    // to było w ng oninit
-    // this.sse.getServerSentEvent("http://localhost:8080/sse/room1")
-    //   .subscribe(value => {
-    //     let event = value as MessageEvent;
-    //     alert(event.data);
-    //     console.log(value);
-    //   });
+  getServerSentEvent(url: string) {
+    return new Observable(observer => {
+      const eventSource = this.getEventSource(url);
+
+      eventSource.onmessage = event => {
+        this._zone.run(() => {
+          observer.next(event);
+        })
+      }
+
+      eventSource.onerror = error => {
+        this._zone.run(() => {
+          observer.error(error)
+        })
+      }
+    });
   }
+
 }

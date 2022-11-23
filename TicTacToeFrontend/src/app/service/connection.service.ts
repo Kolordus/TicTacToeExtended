@@ -8,6 +8,7 @@ import {Constants} from "../../model/Constants";
 import {BehaviorSubject, Observable} from "rxjs";
 import {GameData} from "../../model/GameData";
 import {Router} from "@angular/router";
+import {SseService} from "./sse.service";
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,7 @@ export class ConnectionService {
   gameReceived: boolean = false;
   ws: any;
 
-  constructor(private http: HttpClient, private gameService: GameService, private router: Router) {
+  constructor(private http: HttpClient, private gameService: GameService, private router: Router, private sse: SseService) {
     this.ws = new SockJS(Constants.webSocketEndPoint);
     this.stompClient = Stomp.over(this.ws);
   }
@@ -44,6 +45,8 @@ export class ConnectionService {
         await this.gameService.setGame(createdGame);
         await this.connectAndSubscribe(createdGame.game.gameId);
         await this.navigateToGame(createdGame.game.gameId);
+
+        this.sse.sendSse(createdGame.game.gameId);
       });
   }
 
@@ -160,7 +163,7 @@ export class ConnectionService {
     }
   }
 
-  protected _handleStateUpdate(msg: Frame, _this: this) { // todo - to będzie do ogarnięcia
+  protected _handleStateUpdate(msg: Frame, _this: this) {
     if (msg.body.includes('gameId')) {
       let indexWherePayloadStarts = msg.toString().indexOf("{\"game");
       this.gameService.updateGame(JSON.parse(msg.toString().slice(indexWherePayloadStarts)) as GameData)
