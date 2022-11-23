@@ -21,6 +21,8 @@ export class ConnectionService {
   gameReceived: boolean = false;
   ws: any;
 
+  openGames: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+
   constructor(private http: HttpClient, private gameService: GameService, private router: Router, private sse: SseService) {
     this.ws = new SockJS(Constants.webSocketEndPoint);
     this.stompClient = Stomp.over(this.ws);
@@ -33,7 +35,11 @@ export class ConnectionService {
   }
 
   showOpenGames(): Observable<string[]> {
-    return this.http.get(Constants.connectionUrl + "games") as Observable<string[]>;
+    this.http.get(Constants.connectionUrl + "games").subscribe(games => {
+      this.openGames.next(games as string[]);
+    });
+
+    return this.openGames.asObservable();
   }
 
   async createGame() {
@@ -46,7 +52,7 @@ export class ConnectionService {
         await this.connectAndSubscribe(createdGame.game.gameId);
         await this.navigateToGame(createdGame.game.gameId);
 
-        this.sse.sendSse(createdGame.game.gameId);
+        this.sse.creationOfGame(createdGame.game.gameId);
       });
   }
 
@@ -63,6 +69,7 @@ export class ConnectionService {
         this.gameService.setGame(value as GameData);
         this.navigateToGame(gameId);
         await this.connectAndSubscribe(gameId);
+        this.sse.removalOfGame(gameId);
       }
     );
   }
@@ -200,6 +207,19 @@ export class ConnectionService {
       }))
     );
 
+    this.sse.removalOfGame(this.gameService.getGameId);
     await Promise.all(promises);
+  }
+
+  updateGamesList() {
+    this.http.get(Constants.connectionUrl + "games").subscribe(games => {
+      this.openGames.next(games as string[]);
+    });
+  }
+
+  removeFromGamesList(gameId: string) {
+    let games = this.openGames.getValue();
+    games = games.filter(value => value !== gameId)
+    this.openGames.next(games);
   }
 }

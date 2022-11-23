@@ -20,12 +20,18 @@ export class HomeComponent implements OnInit, OnDestroy{
     private sse: SseService
   ) { }
 
-  ngOnInit(): void {
-    // a może to jako async w html?
+  ngOnInit() {
     let subscription = this.sse.subscribeToLobby().subscribe(value => {
       let event = value as MessageEvent;
-      alert('new game:' + event.data);
-      console.log('new game: ' + event.data);
+      let data = event.data as string;
+
+      let msg: string[] = data.split(" ");
+
+      if (msg[0].includes("create"))
+        this.connection.updateGamesList();
+      if (msg[0].includes("delete")) {
+        this.connection.removeFromGamesList(msg[1].substring(0, msg[1].length));
+      }
     });
 
     this.subs.add(subscription);

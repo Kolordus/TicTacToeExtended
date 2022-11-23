@@ -18,9 +18,9 @@ export class SseService {
     return this.getServerSentEvent("http://localhost:8080/sse/lobby");
   }
 
-  sendSse(gameId: string) {
+  creationOfGame(gameId: string) {
     this.http
-      .post("http://localhost:8080/sse/lobby", JSON.stringify(gameId))
+      .post("http://localhost:8080/sse/lobby", 'create ' + gameId)
       .subscribe(_ => _);
   }
 
@@ -42,4 +42,9 @@ export class SseService {
     });
   }
 
+  removalOfGame(gameId: string) {
+    this.http
+      .post("http://localhost:8080/sse/lobby", 'delete ' + gameId)
+      .subscribe(_ => _);
+  }
 }

@@ -5,7 +5,7 @@ import {NoSuchPageComponent} from "./pages/no-such-page/no-such-page.component";
 import {GameComponent} from "./pages/game/game.component";
 
 const paths: Routes = [
-  {path: '', component: HomeComponent, pathMatch: 'full'},
+  {path: '', pathMatch: 'full', redirectTo: 'home'},
   {path: 'home', component: HomeComponent, pathMatch: 'full'},
   {path: 'game/:gameId', component: GameComponent, pathMatch: 'full'},
   {path: '**', component: NoSuchPageComponent}
