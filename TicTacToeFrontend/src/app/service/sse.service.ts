@@ -1,6 +1,7 @@
 import {Injectable, NgZone} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
+import {Constants} from "../../model/Constants";
 
 @Injectable({
   providedIn: 'root'
@@ -15,12 +16,12 @@ export class SseService {
   }
 
   subscribeToLobby() {
-    return this.getServerSentEvent("http://localhost:8080/sse/lobby");
+    return this.getServerSentEvent(Constants.sse_lobby);
   }
 
   creationOfGame(gameId: string) {
     this.http
-      .post("http://localhost:8080/sse/lobby", 'create ' + gameId)
+      .post(Constants.sse_lobby, 'create ' + gameId)
       .subscribe(_ => _);
   }
 
@@ -44,7 +45,7 @@ export class SseService {
 
   removalOfGame(gameId: string) {
     this.http
-      .post("http://localhost:8080/sse/lobby", 'delete ' + gameId)
+      .post(Constants.sse_lobby, 'delete ' + gameId)
       .subscribe(_ => _);
   }
 }

@@ -74,11 +74,10 @@ export class ConnectionService {
     );
   }
 
-  webSocketEndPoint: string = 'http://localhost:8080/game';
   appPrefix: string = '/room';
 
   async connectAndSubscribe(gameId: string) {
-    let ws = new SockJS(this.webSocketEndPoint);
+    let ws = new SockJS(Constants.webSocketEndPoint);
     this.stompClient = Stomp.over(ws);
     const _this = this;
 
