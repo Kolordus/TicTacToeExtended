@@ -21,15 +21,16 @@ export class HomeComponent implements OnInit, OnDestroy{
   ) { }
 
   ngOnInit() {
-    let subscription = this.sse.subscribeToLobby().subscribe(value => {
+    this.connection.updateGamesList();
+    let subscription = this.sse.subscribeToLobby().subscribe( value => {
       let event = value as MessageEvent;
       let data = event.data as string;
 
       let msg: string[] = data.split(" ");
 
-      if (msg[0].includes("create"))
+      if (msg[0].startsWith("create"))
         this.connection.updateGamesList();
-      if (msg[0].includes("delete")) {
+      if (msg[0].startsWith("delete")) {
         this.connection.removeFromGamesList(msg[1].substring(0, msg[1].length));
       }
     });
@@ -42,6 +43,8 @@ export class HomeComponent implements OnInit, OnDestroy{
   }
 
   async createGameAndConnect() {
-    await this.connection.createGame();
+    setTimeout(async () => {
+      await this.connection.createGame()
+    }, 10);
   }
 }

@@ -2,29 +2,32 @@ package pl.kolak.tictactoewebsocket.services;
 
 
 import core.VictoryChecker;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.kolak.tictactoewebsocket.model.GameData;
+import pl.kolak.tictactoewebsocket.repositories.PlayersRepo;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class PlayersService {
 
-    private final Map<String, Integer> playersAtGame;
+    private final PlayersRepo playersRepo;
 
-    public PlayersService() {
-        this.playersAtGame = new HashMap<>(64);
+    @Autowired
+    public PlayersService(PlayersRepo playersRepo) {
+        this.playersRepo = playersRepo;
     }
 
     public void removeGame(String gameId) {
-        playersAtGame.remove(gameId);
+        this.playersRepo.delete(gameId);
     }
 
     public List<String> getAvailableGames() {
-        return playersAtGame.entrySet()
+        return this.playersRepo.getAllGames()
                 .stream()
                 .filter(gamePlayersNo -> gamePlayersNo.getValue() <= 1)
                 .map(Map.Entry::getKey)
@@ -32,32 +35,28 @@ public class PlayersService {
     }
 
     public void addPlayerToGame(String gameId) {
-        playersAtGame.merge(gameId, 1, Integer::sum);
+        this.playersRepo.addPlayerToGame(gameId);
     }
 
     public void setHostPlayer(String gameId) {
-        playersAtGame.put(gameId, 1);
+        this.playersRepo.addFirstPlayerToGame(gameId);
     }
 
     public void deleteGameIfOver(GameData gameData) {
         int result = gameData.whoWon();
 
         if (result != VictoryChecker.NO_ONE) {
-            this.playersAtGame.remove(gameData.game().getGameId());
+            this.playersRepo.delete(gameData.game().getGameId());
         }
     }
 
     public boolean gameExist(String gameId) {
-        if (playersAtGame.containsKey(gameId))
-            return playersAtGame.get(gameId) == 1;
-        return false;
+        return this.playersRepo.getPlayersCount(gameId)
+                .map(integer -> integer == 1)
+                .orElse(false);
     }
 
     public boolean gameDoesntExist(String gameId) {
-        return playersAtGame.get(gameId) == null;
-    }
-
-    public Map<String, Integer> getGames() {
-        return playersAtGame;
+        return this.playersRepo.getPlayersCount(gameId).isEmpty();
     }
 }

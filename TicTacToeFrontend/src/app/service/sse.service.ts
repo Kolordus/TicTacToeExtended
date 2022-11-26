@@ -8,27 +8,19 @@ import {Constants} from "../../model/Constants";
 })
 export class SseService {
 
-  constructor(private http: HttpClient, private _zone: NgZone) {
+  constructor(private http: HttpClient, private _zone: NgZone) { }
+
+  subscribeToLobby(): Observable<any> {
+    return this._getServerSentEvent(Constants.sse_lobby);
   }
 
-  getEventSource(url: string): EventSource {
+  _getEventSource(url: string): EventSource {
     return new EventSource(url);
   }
 
-  subscribeToLobby() {
-    return this.getServerSentEvent(Constants.sse_lobby);
-  }
-
-  creationOfGame(gameId: string) {
-    this.http
-      .post(Constants.sse_lobby, 'create ' + gameId)
-      .subscribe(_ => _);
-  }
-
-  getServerSentEvent(url: string) {
+  _getServerSentEvent(url: string) {
     return new Observable(observer => {
-      const eventSource = this.getEventSource(url);
-
+      const eventSource = this._getEventSource(url);
       eventSource.onmessage = event => {
         this._zone.run(() => {
           observer.next(event);
@@ -41,11 +33,5 @@ export class SseService {
         })
       }
     });
-  }
-
-  removalOfGame(gameId: string) {
-    this.http
-      .post(Constants.sse_lobby, 'delete ' + gameId)
-      .subscribe(_ => _);
   }
 }

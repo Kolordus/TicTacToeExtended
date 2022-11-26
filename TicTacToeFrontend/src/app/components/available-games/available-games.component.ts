@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {ConnectionService} from "../../service/connection.service";
 
 @Component({
@@ -14,7 +14,7 @@ export class AvailableGamesComponent {
   constructor(private connection: ConnectionService) { }
 
   async joinGame(gameId: string) {
-    await this.connection.joinGame(gameId);
+    await this.connection.joinGameAndRedirect(gameId);
   }
 
 }

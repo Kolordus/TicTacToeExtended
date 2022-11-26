@@ -1,5 +1,5 @@
 import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {GameService} from "../../service/game.service";
 import {GameData} from "../../../model/GameData";
 import {ConnectionService} from "../../service/connection.service";
@@ -17,6 +17,7 @@ export class GameComponent implements OnInit, OnDestroy {
   playerNo$ = this.gameService.playerNo;
 
   constructor(private route: ActivatedRoute,
+              private router: Router,
               private gameService: GameService,
               private connection: ConnectionService) {
   }
@@ -24,6 +25,10 @@ export class GameComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     let subscription = this.gameService.game.subscribe(value => {
       this.game$ = value;
+
+      if (this.game$ === GameData.EMPTY) {
+        this.router.navigate(["/home"]);
+      }
     });
     this.sub.add(subscription);
   }

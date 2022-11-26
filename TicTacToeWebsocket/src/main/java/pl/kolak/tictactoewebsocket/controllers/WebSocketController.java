@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -13,13 +12,16 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import pl.kolak.tictactoewebsocket.model.GameData;
 import pl.kolak.tictactoewebsocket.model.GameDataInput;
 import pl.kolak.tictactoewebsocket.services.GameService;
 import pl.kolak.tictactoewebsocket.services.PlayersService;
+import pl.kolak.tictactoewebsocket.services.SseService;
 import pl.kolak.tictactoewebsocket.util.Constants;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -28,32 +30,35 @@ import java.util.List;
 public class WebSocketController {
 
     private final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
-
     private final GameService gameService;
-
     private final PlayersService playersService;
-
+    private final SseService sseService;
     private final ObjectMapper objectMapper;
 
-    public WebSocketController(GameService gameService, PlayersService playersService) {
+    public WebSocketController(GameService gameService, PlayersService playersService, SseService sseService) {
         this.gameService = gameService;
         this.playersService = playersService;
+        this.sseService = sseService;
 
         objectMapper = new ObjectMapper();
     }
 
     @PostMapping("/games")
     public GameData createGame() {
-        return gameService.createGame();
+        GameData game = gameService.createGame();
+        this.sseService.updateAvailableGames("create " + game.game().getGameId());
+        return game;
     }
 
     @GetMapping("/games/{gameId}")
     public GameData joinGame(@PathVariable String gameId) {
+        this.sseService.updateAvailableGames("delete " + gameId);
         return gameService.getGame(gameId);
     }
 
     @PutMapping("/games/{gameId}")
     public void disconnectFromGame(@PathVariable String gameId) {
+        this.sseService.updateAvailableGames("delete " + gameId);
         gameService.removeGame(gameId);
         playersService.removeGame(gameId);
     }
@@ -90,8 +95,6 @@ public class WebSocketController {
 
         zwrócić
          */
-
-        System.out.println(headerAccessor.getSessionId());
         int playersAtGame = 0;
 
         if (playersService.gameExist(gameId)) {

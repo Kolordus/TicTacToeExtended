@@ -7,8 +7,6 @@ import {GameData} from "../../model/GameData";
 })
 export class GameService {
 
-  winner: number | undefined = -1;
-
   game$ = new BehaviorSubject<GameData>(GameData.EMPTY);
   playerNo$ = new BehaviorSubject<number>(0);
 
@@ -37,13 +35,8 @@ export class GameService {
     return this.selectedFieldNo;
   }
 
-  set setWinner(winner: number) {
-    this.winner = winner;
-  }
-
   updateGame(game: GameData) {
     this.setGame(game);
-    this.winner = this.game$.getValue().whoWon == -1 ? -1 : this.game$.getValue().whoWon;
   }
 
   setPlayerNo(playerNo: number) {
@@ -63,13 +56,14 @@ export class GameService {
 
   selectNominal(nominal: number) {
     if (this.isGameFinished()) return;
-    if (this.game$.getValue().game.currentPlayer.no === this.playerNo$.getValue() && this.winner === -1) {
+    if (this.game$.getValue().game.currentPlayer.no === this.playerNo$.getValue()
+      && this.game$.getValue().whoWon === -1) {
       this.selectedNominal = nominal;
     }
   }
 
   private isGameFinished() {
-    return this.winner !== -1;
+    return this.game$.getValue().whoWon !== -1;
   }
 
   resetNominalAndField() {
