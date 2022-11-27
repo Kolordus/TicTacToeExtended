@@ -5,6 +5,8 @@
 
 <button mat-flat-button (click)="send()" [disabled]="canSend()">send</button>
 
+<app-history></app-history>
+
 <div *ngIf="game$.whoWon !== -1">
   <hr/>
   <br/>

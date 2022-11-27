@@ -77,7 +77,7 @@ export class ConnectionService {
       console.log("Initialize WebSocket Connection");
     }, this.errorCallBack);
 
-    await _this.delay(50);
+    await _this.delay(80);
 
     // refreshing feature
     // this.setDataInlocalStorage(_this.ws._transport.url, gameId);

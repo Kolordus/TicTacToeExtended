@@ -20,16 +20,17 @@ export class HomeComponent implements OnInit, OnDestroy{
     private sse: SseService
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.connection.updateGamesList();
-    let subscription = this.sse.subscribeToLobby().subscribe( value => {
+    let subscription = this.sse.subscribeToLobby().subscribe( async value => {
       let event = value as MessageEvent;
       let data = event.data as string;
 
       let msg: string[] = data.split(" ");
 
-      if (msg[0].startsWith("create"))
-        this.connection.updateGamesList();
+      if (msg[0].startsWith("create")) {
+        await this.connection.updateGamesList();
+      }
       if (msg[0].startsWith("delete")) {
         this.connection.removeFromGamesList(msg[1].substring(0, msg[1].length));
       }

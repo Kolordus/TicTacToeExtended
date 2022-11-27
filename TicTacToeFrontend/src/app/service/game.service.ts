@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable} from "rxjs";
 import {GameData} from "../../model/GameData";
+import {HistoryService} from "./history.service";
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class GameService {
   selectedNominal: number = 0;
   selectedFieldNo: number = 0;
 
-  constructor() { }
+  constructor(private historyService: HistoryService) { }
 
   setGame(game: GameData) {
     this.game$.next(game);
@@ -37,6 +38,7 @@ export class GameService {
 
   updateGame(game: GameData) {
     this.setGame(game);
+    this.historyService.addMovement(game);
   }
 
   setPlayerNo(playerNo: number) {

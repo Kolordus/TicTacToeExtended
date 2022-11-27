@@ -1,0 +1,7 @@
+<div>
+  <div *ngFor="let game of history$ | async; let i = index">
+    <button *ngIf="game" (click)="showThisMove(i)">Show move: {{ i + 1}}</button>
+  </div>
+</div>
+
+<button (click)="showAllHistory()">show alle history</button>
