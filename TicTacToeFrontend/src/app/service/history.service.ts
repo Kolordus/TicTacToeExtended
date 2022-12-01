@@ -8,8 +8,7 @@ import {GameData} from "../../model/GameData";
 })
 export class HistoryService {
 
-  private historyMovesArray: Array<Game> = [Game.EMPTY];
-  private historyMoves$ = new BehaviorSubject<Game[]>(this.historyMovesArray);
+  private historyMoves$ = new BehaviorSubject<Game[]>([Game.EMPTY]);
 
   constructor() { }
 
@@ -19,8 +18,7 @@ export class HistoryService {
 
   addMovement(game: GameData) {
     if (game.game == undefined) return
-    this.historyMovesArray.push(game.game)
-    this.historyMoves$.next(this.historyMovesArray);
+    this.historyMoves$.next([...this.historyMoves$.value, game.game]);
   }
 
   getMovementAtIndext(index: number): Game {
@@ -33,7 +31,6 @@ export class HistoryService {
   }
 
   clear() {
-    this.historyMovesArray = [];
-    this.historyMoves$.next(this.historyMovesArray);
+    this.historyMoves$.next([]);
   }
 }
