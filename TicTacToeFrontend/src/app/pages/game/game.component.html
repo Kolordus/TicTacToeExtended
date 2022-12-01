@@ -1,17 +1,17 @@
-<app-player [playerNo]="playerNo$ | async" [game]="this.game$"></app-player>
-<app-board [game]="this.game$" (selectedField$)="selectFieldNo($event)"></app-board>
-<app-nominals [playerNo]="playerNo$ | async" [game]="this.game$" (selectedNominal$)="selectNominal($event)"></app-nominals>
+<app-player [game]="this.game$"
+            [playerNo]="playerNo$ | async"></app-player>
+
+<app-board [game]="this.game$"
+           (selectedField$)="selectFieldNo($event)"></app-board>
+
+<app-nominals [game]="this.game$"
+              [playerNo]="playerNo$ | async"
+              (selectedNominal$)="selectNominal($event)"></app-nominals>
+
 <br>
 
 <button mat-flat-button (click)="send()" [disabled]="canSend()">send</button>
 
 <app-history></app-history>
 
-<div *ngIf="game$.whoWon !== -1">
-  <hr/>
-  <br/>
-  Winner:
-  <var *ngIf="game$.whoWon === 1"> Player 1 </var>
-  <var *ngIf="game$.whoWon === 2"> Player 2 </var>
-  <var *ngIf="game$.whoWon === 0"> Remis </var>
-</div>
+<app-who-won [game]="game$"></app-who-won>

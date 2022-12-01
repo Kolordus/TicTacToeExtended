@@ -19,6 +19,7 @@ import {MatCardModule} from "@angular/material/card";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import { PlayerComponent } from './pages/game/player/player.component';
 import { HistoryComponent } from './pages/game/history/history.component';
+import { WhoWonComponent } from './pages/game/who-won/who-won.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { HistoryComponent } from './pages/game/history/history.component';
     BoardComponent,
     PlayerComponent,
     HistoryComponent,
+    WhoWonComponent,
   ],
   imports: [
     BrowserModule,

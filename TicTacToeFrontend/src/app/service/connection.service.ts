@@ -195,7 +195,7 @@ export class ConnectionService {
 
     promises.push(
       this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
-        surrenders: this.gameService.playerNo$.getValue()
+        surrenders: this.gameService.currentPlayer
       }))
     );
 

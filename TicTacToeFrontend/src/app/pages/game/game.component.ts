@@ -54,7 +54,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   isCurrentsPlayerTurn() {
-    return this.game$.game.currentPlayer.no != this.gameService.playerNo$.getValue();
+    return this.game$.game.currentPlayer.no != this.gameService.currentPlayer;
   }
 
   isCorrectNominalSelected() {
