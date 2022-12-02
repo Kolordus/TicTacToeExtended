@@ -1,5 +1,6 @@
 import {Component, HostListener, OnDestroy} from '@angular/core';
 import {HistoryService} from "../../../service/history.service";
+import {GameData} from "../../../../model/GameData";
 
 @Component({
   selector: 'app-history',
@@ -9,19 +10,27 @@ import {HistoryService} from "../../../service/history.service";
 export class HistoryComponent implements OnDestroy{
 
   history$ = this.historyService.history;
+  showingGame: GameData | null;
 
   constructor(private historyService: HistoryService) { }
 
   showThisMove(i: number) {
-    console.log(this.historyService.getMovementAtIndext(i))
-  }
-
-  showAllHistory() {
-    this.historyService.showAll();
+    if ((i + 1) === this.historyService.getMovesAmount()) {
+      this.showingGame = null;
+      return;
+    }
+    this.showingGame = this.historyService.getMovementAtIndext(i);
   }
 
   @HostListener('window:beforeunload')
   ngOnDestroy() {
     this.historyService.clear();
+  }
+
+  showName(i: number):string {
+    if ((i) === this.historyService.getMovesAmount())
+      return 'Current move';
+
+    return i.toString();
   }
 }

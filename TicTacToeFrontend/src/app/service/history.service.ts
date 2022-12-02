@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {BehaviorSubject} from "rxjs";
-import {Game} from "../../model/Game";
 import {GameData} from "../../model/GameData";
 
 @Injectable({
@@ -8,7 +7,7 @@ import {GameData} from "../../model/GameData";
 })
 export class HistoryService {
 
-  private historyMoves$ = new BehaviorSubject<Game[]>([Game.EMPTY]);
+  private historyMoves$ = new BehaviorSubject<GameData[]>([GameData.EMPTY]);
 
   constructor() { }
 
@@ -17,17 +16,17 @@ export class HistoryService {
   }
 
   addMovement(game: GameData) {
-    if (game.game == undefined) return
-    this.historyMoves$.next([...this.historyMoves$.value, game.game]);
+    if (game.game == undefined)
+      return
+    this.historyMoves$.next([...this.historyMoves$.value, game]);
   }
 
-  getMovementAtIndext(index: number): Game {
-    console.log('array size: ' + this.historyMoves$.getValue().length);
+  getMovementAtIndext(index: number): GameData {
     return this.historyMoves$.getValue()[index];
   }
 
-  showAll() {
-    console.log(this.historyMoves$.getValue());
+  getMovesAmount(): number {
+    return this.historyMoves$.getValue().length;
   }
 
   clear() {
