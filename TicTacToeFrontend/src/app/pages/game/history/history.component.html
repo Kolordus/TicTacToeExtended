@@ -4,6 +4,6 @@
   </div>
 
   <div *ngIf="showingGame">
-    <app-board [game]="showingGame"></app-board>
+    <app-board [board]="showingGame.game.board"></app-board>
   </div>
 </div>

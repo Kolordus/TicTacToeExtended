@@ -16,6 +16,25 @@ export class GameService {
 
   constructor(private historyService: HistoryService) { }
 
+  selectFieldNo(fieldNo: number) {
+    if (this.isGameFinished()) return;
+    if (this.#game$.getValue().game.currentPlayer.no === this.#playerNo$.getValue()) {
+
+      this.selectedFieldNo = fieldNo;
+
+    }
+  }
+
+  selectNominal(nominal: number) {
+    if (this.isGameFinished()) return;
+    if (this.#game$.getValue().game.currentPlayer.no === this.#playerNo$.getValue()
+      && this.#game$.getValue().whoWon === -1) {
+
+      this.selectedNominal = nominal;
+
+    }
+  }
+
   setGame(game: GameData) {
     this.#game$.next(game);
   }
@@ -51,21 +70,6 @@ export class GameService {
 
   get currentPlayer(): number {
     return this.#playerNo$.getValue();
-  }
-
-  selectFieldNo(fieldNo: number) {
-    if (this.isGameFinished()) return;
-    if (this.#game$.getValue().game.currentPlayer.no === this.#playerNo$.getValue()) {
-      this.selectedFieldNo = fieldNo;
-    }
-  }
-
-  selectNominal(nominal: number) {
-    if (this.isGameFinished()) return;
-    if (this.#game$.getValue().game.currentPlayer.no === this.#playerNo$.getValue()
-      && this.#game$.getValue().whoWon === -1) {
-      this.selectedNominal = nominal;
-    }
   }
 
   private isGameFinished() {

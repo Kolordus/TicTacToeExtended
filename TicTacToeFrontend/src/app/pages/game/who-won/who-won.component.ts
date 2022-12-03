@@ -1,5 +1,4 @@
 import {Component, Input} from '@angular/core';
-import {GameData} from "../../../../model/GameData";
 
 @Component({
   selector: 'app-who-won',
@@ -9,6 +8,6 @@ import {GameData} from "../../../../model/GameData";
 export class WhoWonComponent{
 
   @Input()
-  game: GameData;
+  whoWon: number;
 
 }

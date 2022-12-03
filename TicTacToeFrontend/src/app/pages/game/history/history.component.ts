@@ -22,15 +22,15 @@ export class HistoryComponent implements OnDestroy{
     this.showingGame = this.historyService.getMovementAtIndext(i);
   }
 
-  @HostListener('window:beforeunload')
-  ngOnDestroy() {
-    this.historyService.clear();
-  }
-
   showName(i: number):string {
     if ((i) === this.historyService.getMovesAmount())
       return 'Current move';
 
     return i.toString();
+  }
+
+  @HostListener('window:beforeunload')
+  ngOnDestroy() {
+    this.historyService.clear();
   }
 }

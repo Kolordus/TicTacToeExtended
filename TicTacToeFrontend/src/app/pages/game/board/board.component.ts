@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {GameData} from "../../../../model/GameData";
+import {Field} from "../../../../model/Field";
 
 @Component({
   selector: 'app-board',
@@ -9,7 +9,7 @@ import {GameData} from "../../../../model/GameData";
 export class BoardComponent {
 
   @Input()
-  game: GameData;
+  board: Field[];
 
   @Output()
   selectedField$ = new EventEmitter<number>();

@@ -1,4 +1,4 @@
-<ng-container *ngFor="let field of game?.game?.board; let i = index">
+<ng-container *ngFor="let field of board; let i = index">
   <span (click)="selectFieldNo(field.fieldNo)">
     <button mat-raised-button
             [ngClass]="buttonClass(field.playerNo)"
