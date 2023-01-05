@@ -1,4 +1,4 @@
-<app-available-games [games]="this.availableGames$ | async"></app-available-games>
+<app-available-games *ngIf="this.availableGames$ | async as games" [games]="games"></app-available-games>
 
 <button mat-raised-button color="primary" (click)="createGameAndConnect()">
   create game

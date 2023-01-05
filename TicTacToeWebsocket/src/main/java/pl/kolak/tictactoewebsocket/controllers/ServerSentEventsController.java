@@ -27,6 +27,7 @@ public class ServerSentEventsController {
                 .body(sseService.createEmitter());
     }
 
+    // testing purpose -> updateAvailableGames() is called from websocket service
     @PostMapping("/sse/lobby")
     public ResponseEntity<?> sendUpdate(@RequestBody String body) {
         try {

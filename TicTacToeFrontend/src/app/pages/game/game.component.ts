@@ -13,7 +13,7 @@ import {Subscription} from "rxjs";
 export class GameComponent implements OnInit, OnDestroy {
 
   sub = new Subscription();
-  game$: GameData;
+  game: GameData;
   playerNo$ = this.gameService.playerNo;
 
   constructor(private route: ActivatedRoute,
@@ -24,10 +24,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     let subscription = this.gameService.game.subscribe(value => {
-      this.game$ = value;
+      this.game = value;
 
-      if (this.game$ === GameData.EMPTY) {
-        this.router.navigate(["/home"]);
+      if (this.game === GameData.EMPTY) {
+        this.router.navigate(["home"]);
       }
     });
     this.sub.add(subscription);
@@ -54,12 +54,12 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   isCurrentsPlayerTurn() {
-    return this.game$.game.currentPlayer.no != this.gameService.currentPlayer;
+    return this.game.game.currentPlayer.no != this.gameService.currentPlayer;
   }
 
   isCorrectNominalSelected() {
     if (this.gameService.selectedNominal) {
-      let valueAtField = this.game$.game.board[this.gameService.fieldNoToSend-1];
+      let valueAtField = this.game.game.board[this.gameService.fieldNoToSend-1];
       return !(this.gameService.selectedNominal > valueAtField.currentNominal);
     }
     return true;
@@ -68,7 +68,7 @@ export class GameComponent implements OnInit, OnDestroy {
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
     this.sub.unsubscribe();
-    if (this.game$.game.gameId !== null) {
+    if (this.game.game.gameId !== null) {
       await this.connection.disconnect();
     }
   }

@@ -9,11 +9,11 @@ import {ConnectionService} from "../../service/connection.service";
 export class AvailableGamesComponent {
 
   @Input()
-  games: string[] | null;
+  games: string[];
 
   constructor(private connection: ConnectionService) { }
 
-  async joinGame(gameId: string) {
+  async joinGameAndRedirect(gameId: string) {
     await this.connection.joinGameAndRedirect(gameId);
   }
 

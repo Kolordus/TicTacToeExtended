@@ -44,8 +44,9 @@ export class ConnectionService {
       .subscribe(async value => {
         createdGame = value as GameData;
         this.gameService.setGame(createdGame);
-        // this.historyService.addMove();
+
         await this.connectAndSubscribe(createdGame.game.gameId);
+
         this.navigateToGame(createdGame.game.gameId);
       });
   }
@@ -66,7 +67,6 @@ export class ConnectionService {
       }
     );
   }
-
 
   async connectAndSubscribe(gameId: string) {
     let ws = new SockJS(Constants.webSocketEndPoint);
@@ -171,11 +171,11 @@ export class ConnectionService {
   protected _handleDisconnection(msg: Frame, _this: this, ws: WebSocket) {
     if (msg.body.includes('surrenders')) {
       let number = msg.toString().indexOf("{\"surrenders");
-      let surrendedPlayer = JSON.parse(msg.toString().slice(number));
+      let whoSurrendered = JSON.parse(msg.toString().slice(number));
 
       // todo show that opponent has left
 
-      console.log(surrendedPlayer);
+      console.log(whoSurrendered);
       this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
       this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
       ws.close();

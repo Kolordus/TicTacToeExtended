@@ -20,6 +20,7 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
 import { PlayerComponent } from './pages/game/player/player.component';
 import { HistoryComponent } from './pages/game/history/history.component';
 import { WhoWonComponent } from './pages/game/who-won/who-won.component';
+import { SingleNominalComponent } from './pages/game/nominals/single-nominal.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { WhoWonComponent } from './pages/game/who-won/who-won.component';
     PlayerComponent,
     HistoryComponent,
     WhoWonComponent,
+    SingleNominalComponent,
   ],
   imports: [
     BrowserModule,

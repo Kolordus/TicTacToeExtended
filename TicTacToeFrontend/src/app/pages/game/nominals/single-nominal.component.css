@@ -1,0 +1,16 @@
+.default-nominal {
+  width: 50px;
+  height: 50px;
+  margin-right: 15px;
+  border-color: blue;
+}
+
+.nominal {
+  background-color: white;
+  color: red;
+}
+
+.selectedNominal {
+  background-color: red;
+  color: white;
+}

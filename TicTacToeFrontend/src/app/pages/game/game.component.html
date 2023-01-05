@@ -1,11 +1,11 @@
 <ng-container *ngIf="playerNo$ | async as playerNo">
-  <app-player [game]="this.game$"
+  <app-player [game]="this.game"
               [playerNo]=playerNo></app-player>
 
-  <app-board [board]="this.game$.game.board"
+  <app-board [board]="this.game.game.board"
              (selectedField$)="selectFieldNo($event)"></app-board>
 
-  <app-nominals [game]="this.game$"
+  <app-nominals [game]="this.game"
                 [playerNo]="playerNo"
                 (selectedNominal$)="selectNominal($event)"></app-nominals>
 
@@ -15,5 +15,5 @@
 
   <app-history></app-history>
 
-  <app-who-won [whoWon]="game$.whoWon"></app-who-won>
+  <app-who-won [whoWon]="game.whoWon"></app-who-won>
 </ng-container>
