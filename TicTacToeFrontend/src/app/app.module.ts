@@ -7,7 +7,7 @@ import {FormsModule} from "@angular/forms";
 import {HomeComponent} from './pages/home/home.component';
 import {NoSuchPageComponent} from './pages/no-such-page/no-such-page.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {AppModuleRouting} from "./app.module-routing";
+import {AppModuleRouting} from "./app.module.routing";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatButtonModule} from "@angular/material/button";
