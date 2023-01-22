@@ -7,6 +7,7 @@ import {Constants} from "../../model/Constants";
   providedIn: 'root'
 })
 export class SseService {
+  private emitter: EventSource;
 
   constructor(private http: HttpClient, private _zone: NgZone) { }
 
@@ -14,8 +15,14 @@ export class SseService {
     return this._getServerSentEvent(Constants.sse_lobby);
   }
 
+  unsubscribeLobby(): Observable<any> {
+
+    return this.http.delete(Constants.sse_lobby, {body: this.emitter})
+  }
+
   _getEventSource(url: string): EventSource {
-    return new EventSource(url);
+    this.emitter = new EventSource(url)
+    return this.emitter;
   }
 
   _getServerSentEvent(url: string) {

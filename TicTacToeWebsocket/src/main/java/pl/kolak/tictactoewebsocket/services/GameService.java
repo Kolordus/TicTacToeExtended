@@ -40,20 +40,30 @@ public class GameService {
         return new GameData(this.games.get(gameId), VictoryChecker.NO_ONE);
     }
 
-    public GameData updateGame(String gameId, GameDataInput gameDataInput) {
-        return updateGameAndCheckVictory(gameId,
+    public GameData updateGameAndCache(String gameId, GameDataInput gameDataInput) {
+        Game game = updateGame(gameId,
                 Integer.parseInt(gameDataInput.fieldNo()),
                 Integer.parseInt(gameDataInput.nominal()));
+
+        int winner = victoryChecker.checkForWinner(game);
+
+        return winner == VictoryChecker.NO_ONE ?
+                updateCacheAndReturnUpdatedGame(gameId, game, winner) :
+                endGameAndReturnResult(gameId, winner);
     }
 
-    private GameData updateGameAndCheckVictory(String gameId, int fieldNo, int nominal) {
-        GameData result;
+    public Map<String, Game> getGamesForStats() {
+        return games;
+    }
 
-        Game game = updateGame(gameId, fieldNo, nominal);
+    private GameData endGameAndReturnResult(String gameId, int winner) {
+        Game endedGame = games.remove(gameId);
+        return new GameData(endedGame, winner);
+    }
 
-        result = checkVictory(gameId, game);
-
-        return result;
+    private GameData updateCacheAndReturnUpdatedGame(String gameId, Game game, int winner) {
+        games.put(gameId, game);
+        return new GameData(game, winner);
     }
 
     private Game updateGame(String gameId, int fieldNo, int nominal) {
@@ -61,24 +71,4 @@ public class GameService {
         game.newInput(fieldNo, nominal);
         return game;
     }
-
-    public Map<String, Game> getGamesForStats() {
-        return games;
-    }
-
-    private GameData checkVictory(String gameId, Game game) {
-        GameData result;
-
-        int winner = victoryChecker.checkForWinner(game);
-        if (winner == VictoryChecker.NO_ONE) {
-            games.put(gameId, game);
-            result = new GameData(game, winner);
-        }
-        else {
-            result = new GameData(games.remove(gameId), winner);
-        }
-
-        return result;
-    }
-
 }

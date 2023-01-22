@@ -39,4 +39,8 @@ public class SseService {
             }
         }, nonBlockingService));
     }
+
+    public void deleteEmitter(int id) {
+        sseRepo.deleteById(id);
+    }
 }

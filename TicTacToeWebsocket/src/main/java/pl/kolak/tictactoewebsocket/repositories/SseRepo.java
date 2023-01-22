@@ -18,6 +18,11 @@ public class SseRepo {
     }
 
     public void save(SseEmitter emitter) {
+        System.out.println("stworzone: " + emitter.toString());
         this.emitters.put(emitter.toString(), emitter);
+    }
+
+    public void deleteById(int id) {
+
     }
 }

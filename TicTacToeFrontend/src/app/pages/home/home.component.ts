@@ -12,13 +12,20 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   subs = new Subscription()
 
-  isUserNotConnected$ = this.connection.isUserNotConnected.asObservable();
+  // isUserNotConnected$ = this.connection.isUserNotConnected.asObservable();
   availableGames$: Observable<string[]> = this.connection.showOpenGames();
 
   constructor(
     private connection: ConnectionService,
     private sse: SseService
   ) { }
+  /*
+  można zrobic fork join z show open games i emmitera
+  wtedy będzie można pozyskiwac emmitera z requesta
+  trzeba będzie chyba rozbic na dwa requesty - nie?
+  no chyba żeby zrobić to w jednym i elo - ale z obsevabla dostaje rekord z id i emmiterem i pozyskuje tego emittera
+  spokojnie można tak zrobić przecież
+   */
 
   async ngOnInit() {
     this.connection.updateGamesList();
@@ -39,7 +46,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.subs.add(subscription);
   }
 
-  ngOnDestroy(): void {
+  async ngOnDestroy() {
+    await this.sse.unsubscribeLobby().subscribe(_ => console.log('halo?'));
     this.subs.unsubscribe();
   }
 

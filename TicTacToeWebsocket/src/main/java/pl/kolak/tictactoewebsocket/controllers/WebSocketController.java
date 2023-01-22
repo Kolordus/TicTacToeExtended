@@ -12,7 +12,6 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 import pl.kolak.tictactoewebsocket.model.GameData;
 import pl.kolak.tictactoewebsocket.model.GameDataInput;
@@ -21,7 +20,6 @@ import pl.kolak.tictactoewebsocket.services.PlayersService;
 import pl.kolak.tictactoewebsocket.services.SseService;
 import pl.kolak.tictactoewebsocket.util.Constants;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -84,7 +82,7 @@ public class WebSocketController {
         }
 
         GameData gameData =
-                gameService.updateGame(gameId, getGameDataInputFromPayload(payload, gameId));
+                gameService.updateGameAndCache(gameId, getGameDataInputFromPayload(payload, gameId));
 
         playersService.deleteGameIfOver(gameData);
 

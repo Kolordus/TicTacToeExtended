@@ -187,6 +187,7 @@ export class ConnectionService {
 
   protected _handleDisconnection(msg: Frame, _this: this, ws: WebSocket) {
     if (msg.body.includes('surrenders')) {
+      // raczej nigdy się nie przyda ale lepiej tę wiedzę zostawić na zaś
       // let number = msg.toString().indexOf("{\"surrenders");
       // let whoSurrendered = JSON.parse(msg.toString().slice(number));
 
