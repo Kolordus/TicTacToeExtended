@@ -23,14 +23,9 @@ export class BoardComponent {
   }
 
   buttonClass(playerNo: number) {
-    switch (playerNo) {
-      case 1:
-        return 'player-1';
-      case 2:
-        return 'player-2';
-      default:
-        return 'not-taken';
-    }
+    return playerNo === 1 ?
+      'player-1' : playerNo === 2 ?
+        'player-2' : 'not-taken';
   }
 
   isSelected(fieldNo: number) {

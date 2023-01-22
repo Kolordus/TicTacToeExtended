@@ -1,19 +1,25 @@
 <ng-container *ngIf="playerNo$ | async as playerNo">
-  <app-player [game]="this.game"
-              [playerNo]=playerNo></app-player>
+  <ng-container *ngIf="game$ | async as game">
+    <ng-container *ngIf="game.game">
+      <p>opponent status
+        <img alt="opponent" [src]="this.image$ | async">
+      </p>
+    <app-player [game]="game"
+                [playerNo]=playerNo></app-player>
 
-  <app-board [board]="this.game.game.board"
-             (selectedField$)="selectFieldNo($event)"></app-board>
+    <app-board  [board]="game.game.board"
+               (selectedField$)="selectFieldNo($event)"></app-board>
 
-  <app-nominals [game]="this.game"
-                [playerNo]="playerNo"
-                (selectedNominal$)="selectNominal($event)"></app-nominals>
+    <app-nominals [game]="game"
+                  [playerNo]="playerNo"
+                  (selectedNominal$)="selectNominal($event)"></app-nominals>
+    <br>
 
-  <br>
+    <button mat-flat-button *ngIf="canSend() | async" (click)="send()">send</button>
 
-  <button mat-flat-button (click)="send()" [disabled]="canSend()">send</button>
+    <app-history></app-history>
 
-  <app-history></app-history>
-
-  <app-who-won [whoWon]="game.whoWon"></app-who-won>
+    <app-who-won [whoWon]="game.whoWon"></app-who-won>
+    </ng-container>
+  </ng-container>
 </ng-container>

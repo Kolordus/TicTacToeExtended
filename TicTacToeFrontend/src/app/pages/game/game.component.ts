@@ -3,7 +3,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {GameService} from "../../service/game.service";
 import {GameData} from "../../../model/GameData";
 import {ConnectionService} from "../../service/connection.service";
-import {Subscription} from "rxjs";
+import {map, Subject, takeUntil, tap} from "rxjs";
 
 @Component({
   selector: 'app-game',
@@ -12,9 +12,12 @@ import {Subscription} from "rxjs";
 })
 export class GameComponent implements OnInit, OnDestroy {
 
-  sub = new Subscription();
-  game: GameData;
+  unsubscribe$ = new Subject();
   playerNo$ = this.gameService.playerNo;
+  game$ = this.gameService.game;
+  image$ = this.connection.isOpponentConnected().pipe(
+    map(is => is ? 'assets/is.jpg' : 'assets/isNot.jpg')
+  );
 
   constructor(private route: ActivatedRoute,
               private router: Router,
@@ -23,14 +26,14 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    let subscription = this.gameService.game.subscribe(value => {
-      this.game = value;
-
-      if (this.game === GameData.EMPTY) {
-        this.router.navigate(["home"]);
-      }
-    });
-    this.sub.add(subscription);
+    this.game$.pipe(
+      takeUntil(this.unsubscribe$),
+      tap(gameData => {
+        if (gameData === GameData.EMPTY) {
+          this.router.navigate(["home"]);
+        }
+      })
+    ).subscribe(_ => _);
   }
 
   selectFieldNo(fieldNo: number) {
@@ -46,30 +49,13 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   canSend() {
-    return this.valuesSelected() || this.isCurrentsPlayerTurn() || this.isCorrectNominalSelected();
-  }
-
-  valuesSelected() {
-    return this.gameService.selectedNominal == 0 || this.gameService.fieldNoToSend == 0;
-  }
-
-  isCurrentsPlayerTurn() {
-    return this.game.game.currentPlayer.no != this.gameService.currentPlayer;
-  }
-
-  isCorrectNominalSelected() {
-    if (this.gameService.selectedNominal) {
-      let valueAtField = this.game.game.board[this.gameService.fieldNoToSend-1];
-      return !(this.gameService.selectedNominal > valueAtField.currentNominal);
-    }
-    return true;
+    return this.gameService.canSend();
   }
 
   @HostListener('window:beforeunload')
   async ngOnDestroy() {
-    this.sub.unsubscribe();
-    if (this.game.game.gameId !== null) {
-      await this.connection.disconnect();
-    }
+    await this.connection.disconnect();
+    this.unsubscribe$.next(null);
+    this.unsubscribe$.complete();
   }
 }

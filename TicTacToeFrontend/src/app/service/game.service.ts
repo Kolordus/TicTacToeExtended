@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from "rxjs";
+import {BehaviorSubject, combineLatest, filter, map, Observable} from "rxjs";
 import {GameData} from "../../model/GameData";
 import {HistoryService} from "./history.service";
 
@@ -10,18 +10,16 @@ export class GameService {
 
   #game$ = new BehaviorSubject<GameData>(GameData.EMPTY);
   #playerNo$ = new BehaviorSubject<number>(0);
+  #selectedNominal = new BehaviorSubject<number>(0);
+  #selectedFieldNo = new BehaviorSubject<number>(0);
 
-  selectedNominal: number = 0;
-  selectedFieldNo: number = 0;
-
-  constructor(private historyService: HistoryService) { }
+  constructor(private historyService: HistoryService) {
+  }
 
   selectFieldNo(fieldNo: number) {
     if (this.isGameFinished()) return;
     if (this.#game$.getValue().game.currentPlayer.no === this.#playerNo$.getValue()) {
-
-      this.selectedFieldNo = fieldNo;
-
+      this.#selectedFieldNo.next(fieldNo);
     }
   }
 
@@ -30,13 +28,33 @@ export class GameService {
     if (this.#game$.getValue().game.currentPlayer.no === this.#playerNo$.getValue()
       && this.#game$.getValue().whoWon === -1) {
 
-      this.selectedNominal = nominal;
-
+      this.#selectedNominal.next(nominal);
     }
   }
 
+  canSend(): Observable<boolean> {
+    return combineLatest(
+      [
+        this.game.pipe(
+          filter(gameData => gameData.game !== undefined),
+          map(gameData => gameData.game.currentPlayer.no === this.currentPlayer)
+        ),
+        this.game.pipe(
+          filter(gameData => gameData !== undefined),
+          filter(_ => this.fieldNoToSend != 0),
+          map(gameData => gameData.game.board[this.fieldNoToSend - 1].currentNominal < this.nominalToSend)
+        ),
+      ],
+      (correctPlayer, correctNominal) => ({correctPlayer, correctNominal})
+    ).pipe(
+      map(value => value.correctNominal && value.correctNominal),
+    );
+  }
+
   setGame(game: GameData) {
-    this.#game$.next(game);
+    if (game) {
+      this.#game$.next(game);
+    }
   }
 
   get game(): Observable<GameData> {
@@ -48,11 +66,11 @@ export class GameService {
   }
 
   get nominalToSend(): number {
-    return this.selectedNominal;
+    return this.#selectedNominal.getValue();
   }
 
   get fieldNoToSend(): number {
-    return this.selectedFieldNo;
+    return this.#selectedFieldNo.getValue();
   }
 
   updateGame(game: GameData) {
@@ -64,7 +82,7 @@ export class GameService {
     this.#playerNo$.next(playerNo)
   }
 
-  get playerNo():Observable<number> {
+  get playerNo(): Observable<number> {
     return this.#playerNo$.asObservable();
   }
 
@@ -77,7 +95,7 @@ export class GameService {
   }
 
   resetNominalAndField() {
-    this.selectedFieldNo = 0;
-    this.selectedNominal = 0;
+    this.#selectedFieldNo.next(0);
+    this.#selectedNominal.next(0);
   }
 }

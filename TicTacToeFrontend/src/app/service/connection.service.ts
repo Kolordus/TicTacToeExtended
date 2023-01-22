@@ -14,27 +14,28 @@ import {Router} from "@angular/router";
 })
 export class ConnectionService {
 
-  stompClient: any;
-  canContinue: boolean;
-  isConnected: boolean = false;
-  gameReceived: boolean = false;
-  ws: any;
-  appPrefix: string = '/room';
+  private stompClient: any;
+  private canContinue: boolean;
+  private isConnected: boolean = false;
+  private gameReceived: boolean = false;
+  private readonly ws: any;
+  private appPrefix: string = '/room';
 
-  openGames: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+  #openGames$: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
   isUserNotConnected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+  #isOpponentConnected$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   constructor(private http: HttpClient, private gameService: GameService, private router: Router) {
     this.ws = new SockJS(Constants.webSocketEndPoint);
     this.stompClient = Stomp.over(this.ws);
   }
 
-  userNotConnected() {
-    this.isUserNotConnected.next(!this.isConnected && !this.canContinue);
+  showOpenGames(): Observable<string[]> {
+    return this.#openGames$.asObservable();
   }
 
-  showOpenGames(): Observable<string[]> {
-    return this.openGames.asObservable();
+  isOpponentConnected(): Observable<boolean> {
+    return this.#isOpponentConnected$.asObservable();
   }
 
   createGame() {
@@ -63,6 +64,7 @@ export class ConnectionService {
     this.getGame(gameId).subscribe(async value => {
         this.gameService.setGame(value as GameData);
         this.navigateToGame(gameId);
+        this.#isOpponentConnected$.next(true);
         await this.connectAndSubscribe(gameId);
       }
     );
@@ -81,8 +83,9 @@ export class ConnectionService {
 
     // refreshing feature
     // this.setDataInlocalStorage(_this.ws._transport.url, gameId);
-
     // try connect to a game
+    await this.informAboutJoin();
+
     await _this.stompClient.subscribe(_this.appPrefix + '/' + gameId, async (msg: Frame) => {
 
       _this.showReceivedFromServer(msg);
@@ -92,6 +95,8 @@ export class ConnectionService {
         this._dontAllowConnectionIfTooManyPlayers(_this, ws);
       }
       await this._prepareGameAfterSuccessfulSubscribe(gameId, _this);
+
+      this._handleWelcome(msg, _this);
 
       this._handleStateUpdate(msg, _this);
 
@@ -123,6 +128,12 @@ export class ConnectionService {
 
   delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  informAboutJoin() {
+    this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
+      welcomeMsg: 'hello from: USERNAME'
+    }))
   }
 
   send() {
@@ -161,6 +172,12 @@ export class ConnectionService {
     }
   }
 
+  protected _handleWelcome(msg: Frame, _this: this) {
+    if (msg.body.includes('welcome')) {
+      this.#isOpponentConnected$.next(true);
+    }
+  }
+
   protected _handleStateUpdate(msg: Frame, _this: this) {
     if (msg.body.includes('gameId')) {
       let indexWherePayloadStarts = msg.toString().indexOf("{\"game");
@@ -170,12 +187,11 @@ export class ConnectionService {
 
   protected _handleDisconnection(msg: Frame, _this: this, ws: WebSocket) {
     if (msg.body.includes('surrenders')) {
-      let number = msg.toString().indexOf("{\"surrenders");
-      let whoSurrendered = JSON.parse(msg.toString().slice(number));
+      // let number = msg.toString().indexOf("{\"surrenders");
+      // let whoSurrendered = JSON.parse(msg.toString().slice(number));
 
-      // todo show that opponent has left
+      this.#isOpponentConnected$.next(false);
 
-      console.log(whoSurrendered);
       this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
       this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
       ws.close();
@@ -205,14 +221,14 @@ export class ConnectionService {
   updateGamesList() {
     setTimeout(() => {
       this.http.get(Constants.connectionUrl + "games").subscribe(games => {
-        this.openGames.next(games as string[]);
+        this.#openGames$.next(games as string[]);
       });
     }, 100);
   }
 
   removeFromGamesList(gameId: string) {
-    let games = this.openGames.getValue();
+    let games = this.#openGames$.getValue();
     games = games.filter(value => value !== gameId)
-    this.openGames.next(games);
+    this.#openGames$.next(games);
   }
 }

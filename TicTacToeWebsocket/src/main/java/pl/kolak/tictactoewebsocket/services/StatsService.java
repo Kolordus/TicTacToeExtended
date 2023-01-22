@@ -36,6 +36,6 @@ public class StatsService {
     @Scheduled(cron = "*/10 * * * * *")
     public void method() {
 
-        logger.info("Ilość emitterów: {}", sseRepo.getAll().size());
+        logger.info("Ilość emitterów: {}", sseRepo.getAll().size() + 1);
     }
 }

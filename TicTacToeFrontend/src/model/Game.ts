@@ -29,5 +29,3 @@ export class Game {
     this.currentPlayer = currentPlayer;
   }
 }
-
-

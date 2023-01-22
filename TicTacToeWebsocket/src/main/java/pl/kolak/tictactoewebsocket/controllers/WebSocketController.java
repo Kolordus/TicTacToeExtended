@@ -74,6 +74,10 @@ public class WebSocketController {
     @MessageMapping("/room/{gameId}")
     @SendTo("/room/{gameId}")
     public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
+        if (welcomeMessage(payload)) {
+            return null;
+        }
+
         if (playerDisconnected(payload)) {
             logEventDisconnect(gameId, payload);
             return GameData.EMPTY;
@@ -81,6 +85,7 @@ public class WebSocketController {
 
         GameData gameData =
                 gameService.updateGame(gameId, getGameDataInputFromPayload(payload, gameId));
+
         playersService.deleteGameIfOver(gameData);
 
         return gameData;
@@ -119,6 +124,10 @@ public class WebSocketController {
         }
 
         return gameDataInput;
+    }
+
+    private boolean welcomeMessage(String payload) {
+        return payload.contains("welcom");
     }
 
     private boolean playerDisconnected(String payload) {
