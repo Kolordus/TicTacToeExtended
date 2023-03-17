@@ -47,23 +47,29 @@ public class GameService {
 
         int winner = victoryChecker.checkForWinner(game);
 
-        return winner == VictoryChecker.NO_ONE ?
-                updateCacheAndReturnUpdatedGame(gameId, game, winner) :
-                endGameAndReturnResult(gameId, winner);
+        handleCache(gameId, game, winner);
+
+        return new GameData(game, winner);
+    }
+
+    private void handleCache(String gameId, Game game, int winner) {
+        if (winner == VictoryChecker.NO_ONE) {
+            updateCache(gameId, game);
+        } else {
+            removeFromCache(gameId);
+        }
     }
 
     public Map<String, Game> getGamesForStats() {
         return games;
     }
 
-    private GameData endGameAndReturnResult(String gameId, int winner) {
-        Game endedGame = games.remove(gameId);
-        return new GameData(endedGame, winner);
+    private void removeFromCache(String gameId) {
+        games.remove(gameId);
     }
 
-    private GameData updateCacheAndReturnUpdatedGame(String gameId, Game game, int winner) {
+    private void updateCache(String gameId, Game game) {
         games.put(gameId, game);
-        return new GameData(game, winner);
     }
 
     private Game updateGame(String gameId, int fieldNo, int nominal) {

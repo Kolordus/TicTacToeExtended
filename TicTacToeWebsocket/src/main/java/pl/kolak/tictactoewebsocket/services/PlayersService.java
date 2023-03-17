@@ -3,6 +3,7 @@ package pl.kolak.tictactoewebsocket.services;
 
 import core.VictoryChecker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.kolak.tictactoewebsocket.model.GameData;
 import pl.kolak.tictactoewebsocket.repositories.PlayersRepo;
@@ -19,6 +20,15 @@ public class PlayersService {
     @Autowired
     public PlayersService(PlayersRepo playersRepo) {
         this.playersRepo = playersRepo;
+    }
+
+    @Scheduled(cron = "*/20 * * * * *")
+    public void cleanUnusedGames() {
+        playersRepo.getAllGames().forEach(stringIntegerEntry -> {
+            if (stringIntegerEntry.getValue() == 0) {
+                playersRepo.delete(stringIntegerEntry.getKey());
+            }
+        });
     }
 
     public void removeGame(String gameId) {

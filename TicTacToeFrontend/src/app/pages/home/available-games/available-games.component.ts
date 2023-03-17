@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {ConnectionService} from "../../service/connection.service";
+import {ConnectionService} from "../../../service/connection.service";
 
 @Component({
   selector: 'app-available-games',

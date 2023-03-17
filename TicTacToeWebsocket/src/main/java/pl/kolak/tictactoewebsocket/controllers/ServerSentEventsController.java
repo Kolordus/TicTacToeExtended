@@ -31,7 +31,7 @@ public class ServerSentEventsController {
     public void deleteEmitter(@RequestBody SseEmitter emitter) {
     }
 
-    // testing purpose -> updateAvailableGames() is called from websocket service
+    // testing purpose -> in real scenario updateAvailableGames() is called from websocket service
     @PostMapping("/sse/lobby")
     public ResponseEntity<?> sendUpdate(@RequestBody String body) {
         try {

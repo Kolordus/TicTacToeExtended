@@ -12,7 +12,7 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatButtonModule} from "@angular/material/button";
 import { GameComponent } from './pages/game/game.component';
-import { AvailableGamesComponent } from './components/available-games/available-games.component';
+import { AvailableGamesComponent } from './pages/home/available-games/available-games.component';
 import { NominalsComponent } from './pages/game/nominals/nominals.component';
 import { BoardComponent } from './pages/game/board/board.component';
 import {MatCardModule} from "@angular/material/card";

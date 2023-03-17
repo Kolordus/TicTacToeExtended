@@ -2,12 +2,16 @@ package pl.kolak.tictactoewebsocket.services;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import pl.kolak.tictactoewebsocket.repositories.PlayersRepo;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @SpringBootTest
@@ -24,20 +28,27 @@ class PlayersServiceTest {
         playersRepo.addFirstPlayerToGame("test2");
     }
 
-
-    @Test
+    @ParameterizedTest
+    @CsvSource(textBlock = """
+            test, true,
+            test1, true,
+            test2, true,
+            test3, false
+            """
+    )
     @DisplayName("Game Exist should return correct values")
-    public void test1() {
-        boolean test = serviceUnderTest.gameExist("test");
-        boolean test1 = serviceUnderTest.gameExist("test1");
-        boolean test2 = serviceUnderTest.gameExist("test2");
-        boolean test3 = serviceUnderTest.gameExist("test3");
+    public void test1(String gameId, boolean result) {
+        boolean test = serviceUnderTest.gameExist(gameId);
 
-        assertTrue(test);
-        assertTrue(test1);
-        assertTrue(test2);
-        assertFalse(test3);
+        assertEquals(test, result);
     }
 
-
+    private static Stream<Arguments> testExistingGames() {
+        return Stream.of(
+                Arguments.of("test", true),
+                Arguments.of("test1", true),
+                Arguments.of("test2", true),
+                Arguments.of("test3", false)
+        );
+    }
 }
