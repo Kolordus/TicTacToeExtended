@@ -72,7 +72,8 @@ public class WebSocketController {
     @MessageMapping("/room/{gameId}")
     @SendTo("/room/{gameId}")
     public GameData updateGame(@DestinationVariable String gameId, @Payload String payload) {
-        if (welcomeMessage(payload)) {
+        if (isWelcomeMessage(payload)) {
+            // welcome message is nonrelevant - no need to process
             return null;
         }
 
@@ -124,7 +125,7 @@ public class WebSocketController {
         return gameDataInput;
     }
 
-    private boolean welcomeMessage(String payload) {
+    private boolean isWelcomeMessage(String payload) {
         return payload.contains("welcom");
     }
 

@@ -29,6 +29,7 @@ public class ServerSentEventsController {
 
     @DeleteMapping("/sse/lobby")
     public void deleteEmitter(@RequestBody SseEmitter emitter) {
+        sseService.deleteEmitter(emitter);
     }
 
     // testing purpose -> in real scenario updateAvailableGames() is called from websocket service

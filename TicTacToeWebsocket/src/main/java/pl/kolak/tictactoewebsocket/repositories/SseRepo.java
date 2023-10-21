@@ -21,6 +21,7 @@ public class SseRepo {
         this.emitters.put(emitter.toString(), emitter);
     }
 
-    public void deleteById(int id) {
+    public void deleteById(SseEmitter emitter) {
+        this.emitters.remove(emitter);
     }
 }

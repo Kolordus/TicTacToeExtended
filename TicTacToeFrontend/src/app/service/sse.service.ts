@@ -16,7 +16,6 @@ export class SseService {
   }
 
   unsubscribeLobby(): Observable<any> {
-
     return this.http.delete(Constants.sse_lobby, {body: this.emitter})
   }
 

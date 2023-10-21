@@ -2,19 +2,20 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {GameService} from "./game.service";
 import * as SockJS from "sockjs-client";
-import * as Stomp from "stompjs";
 import {Frame} from "stompjs";
 import {Constants} from "../../model/Constants";
 import {BehaviorSubject, Observable} from "rxjs";
 import {GameData} from "../../model/GameData";
 import {Router} from "@angular/router";
+import {Client, Message, StompSubscription} from '@stomp/stompjs';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConnectionService {
 
-  private stompClient: any;
+  private stompClient: Client;
   private canContinue: boolean;
   private isConnected: boolean = false;
   private gameReceived: boolean = false;
@@ -27,7 +28,7 @@ export class ConnectionService {
 
   constructor(private http: HttpClient, private gameService: GameService, private router: Router) {
     this.ws = new SockJS(Constants.webSocketEndPoint);
-    this.stompClient = Stomp.over(this.ws);
+    this.stompClient = new Client();
   }
 
   showOpenGames(): Observable<string[]> {
@@ -70,38 +71,34 @@ export class ConnectionService {
     );
   }
 
-  async connectAndSubscribe(gameId: string) {
-    let ws = new SockJS(Constants.webSocketEndPoint);
-    this.stompClient = Stomp.over(ws);
-    const _this = this;
+  private subscription: StompSubscription;
 
-    await _this.stompClient.connect({}, async function () {
-      console.log("Initialize WebSocket Connection");
-    }, this.errorCallBack);
+  connectAndSubscribe(gameId: string) {
+    this.stompClient.configure({
+      webSocketFactory: () => new SockJS('http://localhost:8080/game'),
+      onConnect: () => {
+        this.subscription = this.stompClient.subscribe(this.appPrefix + '/' + gameId, (message: Message) => {
+          // Handle game state updates
+          console.log(message.body);
 
-    await _this.delay(80);
+            // this.showReceivedFromServer(message.body); // debugging purpouse
 
-    // refreshing feature
-    // this.setDataInlocalStorage(_this.ws._transport.url, gameId);
-    // try connect to a game
-    await this.informAboutJoin();
+            if (!this.isConnected) {
+              this._setPlayerNo(message, this);
+              // this._dontAllowConnectionIfTooManyPlayers(this, ws);
+            }
+            this._prepareGameAfterSuccessfulSubscribe(gameId, this);
 
-    await _this.stompClient.subscribe(_this.appPrefix + '/' + gameId, async (msg: Frame) => {
+            this._handleWelcome(message, this);
 
-      _this.showReceivedFromServer(msg);
+            this._handleStateUpdate(message, this);
 
-      if (!_this.isConnected) {
-        this._setPlayerNo(msg, _this);
-        this._dontAllowConnectionIfTooManyPlayers(_this, ws);
+            this._handleDisconnection(message, this, this.ws);
+        });
       }
-      await this._prepareGameAfterSuccessfulSubscribe(gameId, _this);
-
-      this._handleWelcome(msg, _this);
-
-      this._handleStateUpdate(msg, _this);
-
-      this._handleDisconnection(msg, _this, ws);
     });
+
+    this.stompClient.activate();
   };
 
   // tbd
@@ -116,7 +113,7 @@ export class ConnectionService {
   //   localStorage.setItem(Constants.WS_LS, trimed);
   // }
 
-  showReceivedFromServer(message: Frame) {
+  showReceivedFromServer(message: string) {
     console.log("Message Recieved from Server :: " + message);
   }
 
@@ -126,27 +123,33 @@ export class ConnectionService {
     }, 100);
   }
 
-  delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 
-  informAboutJoin() {
-    this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
-      welcomeMsg: 'hello from: USERNAME'
-    }))
-  }
+  // informAboutJoin() { // todo
+  //   this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
+  //     welcomeMsg: 'hello from: USERNAME'
+  //   }))
+  // }
 
   send() {
-    this.stompClient.send(Constants.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
-      gameId: this.gameService.getGameId,
-      fieldNo: this.gameService.fieldNoToSend,
-      nominal: this.gameService.nominalToSend
-    }));
+    // this.stompClient.send(Constants.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
+    //   gameId: this.gameService.getGameId,
+    //   fieldNo: this.gameService.fieldNoToSend,
+    //   nominal: this.gameService.nominalToSend
+    // }));
+
+    this.stompClient.publish({
+      destination: Constants.appPrefix + '/' + this.gameService.getGameId,
+      body: JSON.stringify({
+          gameId: this.gameService.getGameId,
+          fieldNo: this.gameService.fieldNoToSend,
+          nominal: this.gameService.nominalToSend
+      })
+    });
 
     this.gameService.resetNominalAndField();
   }
 
-  protected _setPlayerNo(msg: Frame, _this: this) {
+  protected _setPlayerNo(msg: Message, _this: this) {
     let playerNo = msg.body;
     if (Constants.PLAYER_NUMBERS.includes(playerNo as string)) {
       this.isUserNotConnected.next(false);
@@ -155,13 +158,14 @@ export class ConnectionService {
     }
   }
 
-  protected _dontAllowConnectionIfTooManyPlayers(_this: this, ws: WebSocket) {
-    if (!_this.canContinue) {
-      _this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
-      _this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
-      ws.close();
-    }
-  }
+  // todo
+  // protected _dontAllowConnectionIfTooManyPlayers(_this: this, ws: WebSocket) {
+  //   if (!_this.canContinue) {
+  //     _this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
+  //     _this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
+  //     ws.close();
+  //   }
+  // }
 
   protected _prepareGameAfterSuccessfulSubscribe(gameId: string, _this: this) {
     if (!this.gameReceived) {
@@ -172,7 +176,7 @@ export class ConnectionService {
     }
   }
 
-  protected _handleWelcome(msg: Frame, _this: this) {
+  protected _handleWelcome(msg: Message, _this: this) {
     if (msg.body.includes('welcome')) {
       this.#isOpponentConnected$.next(true);
     }
@@ -194,7 +198,8 @@ export class ConnectionService {
       this.#isOpponentConnected$.next(false);
 
       this.stompClient.unsubscribe(Constants.appPrefix + '/' + this.gameService.getGameId);
-      this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
+      // this.stompClient.disconnect(Constants.appPrefix + '/' + this.gameService.getGameId);
+      // todo
       ws.close();
     }
   }
@@ -210,7 +215,10 @@ export class ConnectionService {
         })
     );
 
+
+    //todo
     promises.push(
+      // this.stompClient.publish() -> teraz tego trzeba użyć
       this.stompClient.send(this.appPrefix + '/' + this.gameService.getGameId, {}, JSON.stringify({
         surrenders: this.gameService.currentPlayer
       }))

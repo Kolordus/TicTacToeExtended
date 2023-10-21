@@ -42,13 +42,17 @@ export class GameService {
         this.game.pipe(
           filter(gameData => gameData !== undefined),
           filter(_ => this.fieldNoToSend != 0),
-          map(gameData => gameData.game.board[this.fieldNoToSend - 1].currentNominal < this.nominalToSend)
+          map(gameData => this.isSelectedNominalHigher(gameData))
         ),
       ],
       (correctPlayer, correctNominal) => ({correctPlayer, correctNominal})
     ).pipe(
       map(value => value.correctNominal && value.correctNominal),
     );
+  }
+
+  private isSelectedNominalHigher(gameData: GameData): boolean {
+    return gameData.game.board[this.fieldNoToSend - 1].currentNominal < this.nominalToSend;
   }
 
   setGame(game: GameData) {

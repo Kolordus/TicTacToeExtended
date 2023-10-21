@@ -17,7 +17,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private connection: ConnectionService,
-    private sse: SseService,
+    private sse: SseService
   ) {}
   /*
   można zrobic fork join z show open games i emmitera

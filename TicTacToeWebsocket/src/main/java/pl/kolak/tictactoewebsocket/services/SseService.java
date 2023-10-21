@@ -21,8 +21,7 @@ public class SseService {
         this.sseRepo = sseRepo;
     }
 
-    private final ExecutorService nonBlockingService =
-            Executors.newFixedThreadPool(1);
+    private final ExecutorService nonBlockingService = Executors.newFixedThreadPool(1);
 
     public SseEmitter createEmitter() {
         SseEmitter sseEmitter = new SseEmitter();
@@ -40,7 +39,7 @@ public class SseService {
         }, nonBlockingService));
     }
 
-    public void deleteEmitter(int id) {
-        sseRepo.deleteById(id);
+    public void deleteEmitter(SseEmitter emitter) {
+        sseRepo.deleteById(emitter);
     }
 }
